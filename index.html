@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EquiSense — Accessible STEM for Blind &amp; Low-Vision Students</title>
+  <link rel="stylesheet" href="styles/base.css" />
+  <link rel="stylesheet" href="styles/theme-default.css" id="theme-stylesheet" />
+
+  <!-- MathJax 3 — bundled config before load -->
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] },
+      startup: { typeset: false }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
+
+  <!-- Papa Parse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5/papaparse.min.js" defer></script>
+
+  <!-- D3 -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
+</head>
+<body>
+  <!-- Skip link: must be the very first focusable element -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header role="banner">
+    <div class="header-inner">
+      <h1>EquiSense</h1>
+      <p class="tagline">Accessible math &amp; data for blind and low-vision STEM students</p>
+      <div class="header-controls">
+        <button id="btn-high-contrast" aria-pressed="false">High Contrast</button>
+        <button id="btn-font-increase" aria-label="Increase font size">A+</button>
+        <button id="btn-font-decrease" aria-label="Decrease font size">A−</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Screen reader live regions -->
+  <div id="sr-status" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+  <div id="sr-alert"  role="alert"  aria-live="assertive" aria-atomic="true" class="sr-only"></div>
+
+  <nav aria-label="Main navigation">
+    <ul>
+      <li><a href="#section-equation">Equation Navigator</a></li>
+      <li><a href="#section-graph">Graph Sonifier</a></li>
+      <li><a href="#section-tactile">Tactile Export</a></li>
+    </ul>
+  </nav>
+
+  <main id="main-content">
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- EQUATION NAVIGATOR                                         -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section id="section-equation" aria-labelledby="eq-heading">
+      <h2 id="eq-heading">Equation Navigator</h2>
+      <p>Paste a LaTeX equation below and navigate its structure using the keyboard.</p>
+
+      <div class="input-group">
+        <label for="latex-input">LaTeX equation</label>
+        <input
+          id="latex-input"
+          type="text"
+          placeholder="\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}"
+          aria-describedby="latex-hint"
+        />
+        <p id="latex-hint" class="hint">
+          Example: <code>\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}</code>
+        </p>
+        <button id="btn-parse-eq">Load Equation</button>
+      </div>
+
+      <div id="eq-rendered" aria-hidden="true" class="eq-display"></div>
+
+      <div id="eq-controls" class="control-panel" hidden>
+        <p class="keyboard-guide">
+          <kbd>↑</kbd> parent &nbsp;
+          <kbd>↓</kbd> first child &nbsp;
+          <kbd>←</kbd> prev sibling &nbsp;
+          <kbd>→</kbd> next sibling &nbsp;
+          <kbd>Space</kbd> speak node &nbsp;
+          <kbd>R</kbd> read full equation
+        </p>
+        <button id="btn-speak-full">Read Full Equation (R)</button>
+        <p id="eq-cursor-description" aria-live="polite" class="cursor-desc"></p>
+      </div>
+
+      <div id="eq-tree-visual" aria-hidden="true" class="tree-visual"></div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- GRAPH SONIFIER                                             -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section id="section-graph" aria-labelledby="graph-heading">
+      <h2 id="graph-heading">Graph Sonifier</h2>
+      <p>Upload a two-column CSV (x, y) and listen to the data as audio.</p>
+
+      <div class="input-group">
+        <label for="csv-upload">CSV file</label>
+        <input id="csv-upload" type="file" accept=".csv" />
+        <p class="hint">Or load a sample:</p>
+        <div class="sample-buttons" role="group" aria-label="Sample datasets">
+          <button class="btn-sample" data-file="assets/sample-data/linear.csv">Linear</button>
+          <button class="btn-sample" data-file="assets/sample-data/sinusoidal.csv">Sinusoidal</button>
+          <button class="btn-sample" data-file="assets/sample-data/exponential.csv">Exponential</button>
+        </div>
+      </div>
+
+      <div id="graph-controls" class="control-panel" hidden>
+        <label for="playback-speed">Playback duration (seconds)
+          <input id="playback-speed" type="range" min="2" max="15" value="5" step="1" />
+          <output id="playback-speed-value" for="playback-speed">5s</output>
+        </label>
+        <div class="playback-buttons" role="group" aria-label="Playback controls">
+          <button id="btn-play">Play</button>
+          <button id="btn-stop" disabled>Stop</button>
+          <button id="btn-replay" disabled>Replay</button>
+        </div>
+      </div>
+
+      <div id="chart-container" aria-label="Line chart of uploaded data"></div>
+      <p id="graph-data-summary" aria-live="polite" class="data-summary"></p>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- TACTILE EXPORT                                             -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section id="section-tactile" aria-labelledby="tactile-heading">
+      <h2 id="tactile-heading">Tactile Export</h2>
+      <p>
+        Download an embosser-optimised SVG of the current graph — suitable for
+        Tiger embossers and similar tactile graphics hardware.
+      </p>
+      <button id="btn-export-tactile" disabled>Download Tactile SVG</button>
+      <p class="hint">Load and play a dataset in the Graph Sonifier first.</p>
+    </section>
+
+  </main>
+
+  <footer role="contentinfo">
+    <p>EquiSense &mdash; TSA Software Development 2026 &mdash; Made for blind &amp; low-vision STEM students</p>
+  </footer>
+
+  <script type="module" src="scripts/main.js"></script>
+</body>
+</html>

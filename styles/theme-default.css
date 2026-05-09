@@ -1,0 +1,12 @@
+/* Default theme — all values here are the base; overridden by high-contrast */
+:root {
+  --color-bg: #ffffff;
+  --color-text: #1a1a1a;
+  --color-primary: #1a5276;
+  --color-primary-hover: #154360;
+  --color-accent: #e67e22;
+  --color-surface: #f4f6f7;
+  --color-border: #abb2b9;
+  --color-focus: #e67e22;
+  --color-focus-bg: #fdf2e9;
+}
