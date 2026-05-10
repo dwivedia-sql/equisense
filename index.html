@@ -81,11 +81,11 @@
   <nav aria-label="Main navigation">
     <ul>
       <li><a href="#section-start">Start Here</a></li>
-      <li><a href="#section-inverse">Inverse Sonification</a></li>
       <li><a href="#section-camera">Camera Capture</a></li>
       <li><a href="#section-equation">Equation Navigator</a></li>
       <li><a href="#section-graph">Graph Sonifier</a></li>
       <li><a href="#section-tactile">Tactile Export</a></li>
+      <li><a href="#section-advanced">Advanced Tools</a></li>
     </ul>
   </nav>
 
@@ -120,7 +120,7 @@
         <article class="start-card">
           <p class="start-kicker">Fast capture</p>
           <h3>Use the camera or voice</h3>
-          <p>Capture printed math from a camera or turn on voice commands after you know the basics.</p>
+          <p>Capture printed math from a camera, then use advanced tools only if you want the extra controls.</p>
           <a href="#section-camera" class="start-link">Open Camera Capture</a>
         </article>
       </div>
@@ -129,25 +129,6 @@
         <a href="#section-graph" class="start-action">Try sample data</a>
         <a href="#section-equation" class="start-action">Enter an equation</a>
         <a href="#section-camera" class="start-action">Scan printed math</a>
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <!-- INVERSE SONIFICATION                                       -->
-    <!-- ══════════════════════════════════════════════════════════ -->
-    <section id="section-inverse" aria-labelledby="inverse-heading">
-      <h2 id="inverse-heading">Inverse Sonification</h2>
-      <p>
-        Hum or sing a curve. EquiSense listens to the pitch contour, fits the closest
-        matching equation, and sends it straight into the navigator.
-      </p>
-      <div class="control-panel">
-        <div class="playback-buttons" role="group" aria-label="Inverse sonification controls">
-          <button id="btn-hum-start">Start Humming</button>
-          <button id="btn-hum-stop" disabled>Stop &amp; Fit</button>
-        </div>
-        <p id="hum-status" aria-live="polite" class="hint"></p>
-        <p id="hum-result" aria-live="polite"></p>
       </div>
     </section>
 
@@ -237,12 +218,6 @@
           <span id="bluetooth-status" aria-live="polite" class="hint" style="align-self:center"></span>
         </div>
       </div>
-
-      <!-- Voice command toggle -->
-      <div style="margin-top:1rem">
-        <button id="btn-voice-start">Enable Voice Commands</button>
-        <p class="hint" style="margin-top:0.4rem">Use the page with buttons first; say "help" when you want the full command list.</p>
-      </div>
     </section>
 
     <!-- ══════════════════════════════════════════════════════════ -->
@@ -295,6 +270,37 @@
       </p>
       <button id="btn-export-tactile" disabled>Download Tactile SVG</button>
       <p class="hint">Load a dataset in the Graph Sonifier first so the export has something to render.</p>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- ADVANCED TOOLS                                            -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section id="section-advanced" aria-labelledby="advanced-heading">
+      <h2 id="advanced-heading">Advanced tools</h2>
+      <p>
+        These tools are still available, but they are optional and more experimental.
+        Use them if you want to go beyond the core graph, equation, and camera flows.
+      </p>
+
+      <div class="advanced-grid">
+        <article class="advanced-card">
+          <h3>Inverse Sonification</h3>
+          <p>Hum a curve and fit it back into the equation navigator. Best when you want to explore the idea, not as a primary workflow.</p>
+          <div class="playback-buttons" role="group" aria-label="Inverse sonification controls">
+            <button id="btn-hum-start">Start Humming</button>
+            <button id="btn-hum-stop" disabled>Stop &amp; Fit</button>
+          </div>
+          <p id="hum-status" aria-live="polite" class="hint"></p>
+          <p id="hum-result" aria-live="polite"></p>
+        </article>
+
+        <article class="advanced-card">
+          <h3>Voice Commands</h3>
+          <p>Use voice only after you know the button-based controls. Say “help” if you need the full command list.</p>
+          <button id="btn-voice-start">Enable Voice Commands</button>
+          <p class="hint" style="margin-top:0.4rem">Buttons first, voice second.</p>
+        </article>
+      </div>
     </section>
 
   </main>

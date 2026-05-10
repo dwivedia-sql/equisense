@@ -333,6 +333,12 @@ section > p:first-of-type {
 
 #section-start::before { background: linear-gradient(180deg, #0f766e, #14b8a6); }
 
+#section-advanced {
+  background: linear-gradient(180deg, #fcfcfd 0%, #f8fafc 100%);
+}
+
+#section-advanced::before { background: linear-gradient(180deg, #475569, #94a3b8); }
+
 .start-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -404,6 +410,43 @@ section > p:first-of-type {
 
 .start-action {
   background: linear-gradient(180deg, #f8fbff, #eef6ff);
+}
+
+.advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.advanced-card {
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem;
+  box-shadow: var(--shadow-xs);
+}
+
+.advanced-card h3 {
+  font-size: 1.02rem;
+  color: var(--slate-900);
+  margin-bottom: 0.45rem;
+}
+
+.advanced-card p {
+  color: var(--slate-600);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin-bottom: 0.85rem;
+}
+
+.advanced-card .playback-buttons {
+  margin-top: 0.4rem;
+}
+
+.advanced-card .hint {
+  margin-top: 0.35rem;
+  margin-bottom: 0;
 }
 
 /* ── Section ID–specific accent colors ── */

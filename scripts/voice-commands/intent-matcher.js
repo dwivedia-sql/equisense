@@ -50,7 +50,7 @@ const INTENT_RULES = [
   { patterns: ['help', 'what can i say', 'commands', 'voice commands'], intent: 'help', params: {} },
 ];
 
-const HELP_TEXT = `Voice commands: navigate up, down, left, right. Play, stop, replay. Slower or faster. Read equation. Describe. Load linear, sinusoidal, exponential. High contrast. Start humming to use inverse sonification. Say help to hear this again.`;
+const HELP_TEXT = `Voice commands: navigate up, down, left, right. Play, stop, replay. Slower or faster. Read equation. Describe. Load linear, sinusoidal, exponential. High contrast. Advanced tools include voice control and inverse sonification. Say help to hear this again.`;
 
 /**
  * Match a transcript to an intent.

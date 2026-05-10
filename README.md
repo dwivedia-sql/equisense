@@ -14,6 +14,8 @@ TSA Software Development 2026 — Theme: Accessibility for vision or hearing dis
 
 **Tactile Export** — Download an embosser-optimised SVG of the current graph with bold outlines and Braille tick labels, suitable for Tiger/ViewPlus embossers.
 
+**Advanced Tools** — Inverse Sonification and Voice Commands remain available, but they are optional extras rather than the primary product flow.
+
 ## Start Here
 
 The app opens with a sample graph and a starter equation already loaded, so the
@@ -22,7 +24,8 @@ use this path:
 
 1. Load a sample dataset in **Graph Sonifier** to understand the playback flow.
 2. Paste a simple LaTeX equation into **Equation Navigator** and move through it with the arrow keys.
-3. Try **Camera Capture** if you want OCR, or **Inverse Sonification** if you want to hum a curve into an equation.
+3. Try **Camera Capture** if you want OCR.
+4. Open **Advanced Tools** only if you want inverse humming or voice control.
 
 The top-of-page **Start Here** section mirrors this path inside the app.
 
@@ -61,7 +64,10 @@ Use the sample datasets if you want a quick demo, or upload your own CSV. Playba
 Start the camera, line up one equation in the viewfinder, then capture it. If the camera is unavailable, upload a JPG or PNG instead.
 
 ### Voice Commands
-Turn voice commands on after you have the basics. Say `help` to hear the available commands.
+Turn voice commands on only if you want the optional advanced controls. Say `help` to hear the available commands.
+
+### Advanced Tools
+Inverse sonification is experimental. Use it as a bonus workflow, not the main path.
 
 ### Global
 | Key | Action |
