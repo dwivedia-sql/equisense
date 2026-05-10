@@ -45,6 +45,13 @@ import { openMicrophone } from './inverse-sonification/microphone.js';
 import { detectPitch, classifyBuffer } from './inverse-sonification/pitch-detect.js';
 import { fitContour } from './inverse-sonification/curve-fit.js';
 
+const DEFAULT_SAMPLE_DATA = 'assets/sample-data/linear.csv';
+const DEFAULT_EQUATION = '\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}';
+const STORAGE_KEYS = {
+  equation: 'eq_last_equation',
+  sampleSource: 'eq_last_sample_source',
+};
+
 // ── Bootstrap ────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -56,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initVoiceCommands();
   initBraillePanel();
   initInverseSonification();
+  loadDefaultWorkspace().catch(err => console.warn('Default workspace failed to load', err));
   showHeadphonesPromptIfNeeded();
   prewarmOCRWorker();
 });
@@ -75,6 +83,26 @@ async function showHeadphonesPromptIfNeeded() {
   }
 }
 
+// ── Default workspace ────────────────────────────────────────────────────────
+
+async function loadDefaultWorkspace() {
+  const defaultSampleSource = localStorage.getItem(STORAGE_KEYS.sampleSource) || DEFAULT_SAMPLE_DATA;
+  const samplePoints = await parseCSVFromURL(defaultSampleSource).catch(() => null);
+  if (samplePoints?.length) {
+    applyData(samplePoints, { announce: false });
+  }
+
+  const input = document.getElementById('latex-input');
+  const savedEquation = localStorage.getItem(STORAGE_KEYS.equation) || DEFAULT_EQUATION;
+  if (input && !input.value.trim()) {
+    input.value = savedEquation;
+  }
+
+  if ((input?.value || savedEquation).trim()) {
+    await loadEquation(input?.value?.trim() || savedEquation, { announce: false, focus: false, persistEquation: false });
+  }
+}
+
 // ── Equation Navigator ───────────────────────────────────────────────────────
 
 let eqAST    = null;
@@ -82,7 +110,7 @@ let eqCursor = null;
 let eqSectionFocused = false;
 
 function initEquationNavigator() {
-  document.getElementById('btn-parse-eq').addEventListener('click', loadEquation);
+  document.getElementById('btn-parse-eq').addEventListener('click', () => loadEquation());
   document.getElementById('latex-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') loadEquation();
   });
@@ -97,7 +125,13 @@ function initEquationNavigator() {
   document.addEventListener('keydown', handleEquationKey);
 }
 
-async function loadEquation(latexOverride) {
+async function loadEquation(latexOverride, options = {}) {
+  const {
+    announce = true,
+    focus = true,
+    persistEquation = true,
+  } = options;
+
   const input = document.getElementById('latex-input');
   const latex = typeof latexOverride === 'string' ? latexOverride : input.value.trim();
   if (!latex) return;
@@ -114,13 +148,21 @@ async function loadEquation(latexOverride) {
     eqAST    = parseMathML(mathmlSource);
     eqCursor = initCursor(eqAST);
 
+    if (persistEquation) {
+      localStorage.setItem(STORAGE_KEYS.equation, latex);
+    }
+
     document.getElementById('eq-controls').hidden = false;
     document.getElementById('braille-panel').hidden = false;
     updateCursorDisplay();
 
-    announceToScreenReader('Equation loaded. Use arrow keys to navigate in 3D spatial audio.');
-    display.setAttribute('tabindex', '-1');
-    display.focus();
+    if (announce) {
+      announceToScreenReader('Equation loaded. Use arrow keys to navigate in spatial audio.');
+    }
+    if (focus) {
+      display.setAttribute('tabindex', '-1');
+      display.focus();
+    }
   } catch (err) {
     console.error('MathJax error', err);
     announceToScreenReader('Could not parse equation. Check your LaTeX syntax.', 'assertive');
@@ -187,18 +229,12 @@ function initGraphSonifier() {
   document.getElementById('csv-upload').addEventListener('change', async e => {
     const file = e.target.files[0];
     if (!file) return;
-    const points = await parseCSV(file).catch(err => {
-      announceToScreenReader(`Error: ${err.message}`, 'assertive');
-    });
-    if (points) applyData(points);
+    await loadGraphFromFile(file);
   });
 
   document.querySelectorAll('.btn-sample').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const points = await parseCSVFromURL(btn.dataset.file).catch(err => {
-        announceToScreenReader(`Error: ${err.message}`, 'assertive');
-      });
-      if (points) applyData(points);
+      await loadGraphFromSource(btn.dataset.file, { persistSampleSource: true });
     });
   });
 
@@ -213,10 +249,36 @@ function initGraphSonifier() {
   });
 }
 
-function applyData(points) {
+async function loadGraphFromFile(file, options = {}) {
+  const points = await parseCSV(file).catch(err => {
+    announceToScreenReader(`Error: ${err.message}`, 'assertive');
+    return null;
+  });
+  if (points) applyData(points, options);
+}
+
+async function loadGraphFromSource(source, options = {}) {
+  const points = await parseCSVFromURL(source).catch(err => {
+    announceToScreenReader(`Error: ${err.message}`, 'assertive');
+    return null;
+  });
+  if (points) applyData(points, { ...options, source });
+}
+
+function applyData(points, options = {}) {
+  const {
+    announce = true,
+    persistSampleSource = false,
+    source = '',
+  } = options;
+
   const normalized = normalizeData(points);
   graphData   = normalized.points;
   graphBounds = normalized;
+
+  if (persistSampleSource && source) {
+    localStorage.setItem(STORAGE_KEYS.sampleSource, source);
+  }
 
   renderChart(graphData, document.getElementById('chart-container'), graphBounds);
   document.getElementById('graph-data-summary').textContent = describeDataset(normalized);
@@ -235,7 +297,9 @@ function applyData(points) {
   document.getElementById('btn-replay').disabled = false;
   document.getElementById('btn-export-tactile').disabled = false;
 
-  announceToScreenReader(describeDataset(normalized));
+  if (announce) {
+    announceToScreenReader(describeDataset(normalized));
+  }
 }
 
 function startPlayback() {
@@ -542,7 +606,7 @@ function stopHumming() {
   if (fit.latex) {
     // Load into equation navigator
     document.getElementById('latex-input').value = fit.latex;
-    loadEquation(fit.latex);
+    loadEquation(fit.latex, { persistEquation: true });
     if (statusEl) statusEl.textContent += ' — Loaded into Equation Navigator.';
   }
 }

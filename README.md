@@ -16,7 +16,9 @@ TSA Software Development 2026 — Theme: Accessibility for vision or hearing dis
 
 ## Start Here
 
-If this is your first time opening the app, use this path:
+The app opens with a sample graph and a starter equation already loaded, so the
+main workflows are usable immediately. If you want to swap in your own content,
+use this path:
 
 1. Load a sample dataset in **Graph Sonifier** to understand the playback flow.
 2. Paste a simple LaTeX equation into **Equation Navigator** and move through it with the arrow keys.
@@ -53,7 +55,7 @@ The app loads MathJax, Papa Parse, and D3 from CDN on first load, then caches th
 | `R` | Read the full equation aloud |
 
 ### Graph Sonifier
-Use the sample datasets if you want a quick demo, then use Play / Stop / Replay. Playback duration is adjustable (2–15 seconds).
+Use the sample datasets if you want a quick demo, or upload your own CSV. Playback duration is adjustable (2–15 seconds).
 
 ### Camera Capture
 Start the camera, line up one equation in the viewfinder, then capture it. If the camera is unavailable, upload a JPG or PNG instead.
