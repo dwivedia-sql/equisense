@@ -1,12 +1,14 @@
-/* Default theme — all values here are the base; overridden by high-contrast */
+/* Default theme — semantic color tokens; overridden by high-contrast */
 :root {
-  --color-bg: #ffffff;
-  --color-text: #1a1a1a;
-  --color-primary: #1a5276;
-  --color-primary-hover: #154360;
-  --color-accent: #e67e22;
-  --color-surface: #f4f6f7;
-  --color-border: #abb2b9;
-  --color-focus: #e67e22;
-  --color-focus-bg: #fdf2e9;
+  --color-bg:           #f8fafc;
+  --color-surface:      #ffffff;
+  --color-surface-2:    #f1f5f9;
+  --color-text:         #0f172a;
+  --color-text-muted:   #64748b;
+  --color-primary:      #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-accent:       #f59e0b;
+  --color-border:       #e2e8f0;
+  --color-focus:        #3b82f6;
+  --color-focus-bg:     #eff6ff;
 }

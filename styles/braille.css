@@ -1,58 +1,105 @@
 /* braille.css — Virtual Braille display and voice command bar styles */
 
 /* ── Braille display ── */
-#braille-panel h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+#braille-panel {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-color: #334155;
+  color: #e2e8f0;
+}
+#braille-panel h3 {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+}
 
 .braille-row {
   display: flex;
-  gap: 2px;
-  padding: 0.5rem 0.4rem;
-  background: #1a1a1a;
+  gap: 3px;
+  padding: 0.6rem 0.75rem;
+  background: #0f172a;
   border-radius: var(--radius);
   overflow-x: auto;
   user-select: none;
+  border: 1px solid #1e293b;
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
 }
 
 .braille-cell {
   font-size: 1.6rem;
   line-height: 1;
-  color: #444;
+  color: #334155;
   min-width: 1.6rem;
   text-align: center;
-  transition: color 0.1s;
+  transition: color 0.08s, text-shadow 0.08s;
 }
 
-.braille-cell--active { color: #f0f0f0; }
+.braille-cell--active {
+  color: #e2e8f0;
+  text-shadow: 0 0 8px rgba(99, 179, 237, 0.5);
+}
 
 .braille-meta {
-  font-size: 0.8rem;
-  color: #888;
-  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 0.4rem;
+}
+
+#bluetooth-status {
+  font-size: 0.82rem;
+  color: #94a3b8;
 }
 
 /* ── Voice command bar ── */
 .voice-bar {
-  background: #154360;
+  background: linear-gradient(90deg, var(--blue-800), var(--blue-700));
   color: #fff;
-  padding: 0.45rem 1.5rem;
+  padding: 0.55rem 1.5rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.3);
+  position: sticky;
+  top: 48px;
+  z-index: 90;
 }
 .voice-bar[hidden] { display: none; }
-#voice-status-text { flex: 1; }
+#voice-status-text { flex: 1; font-weight: 500; }
 .voice-bar button {
-  background: rgba(255,255,255,0.2);
-  border: 1px solid rgba(255,255,255,0.4);
-  padding: 0.25rem 0.75rem;
-  font-size: 0.85rem;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 0.3rem 0.85rem;
+  font-size: 0.82rem;
+  border-radius: var(--radius-pill);
+  box-shadow: none;
+  transform: none;
+}
+.voice-bar button:hover:not(:disabled) {
+  background: rgba(255,255,255,0.25);
+  transform: none;
+  box-shadow: none;
 }
 
-/* ── Inverse sonification ── */
-#hum-result { font-weight: 700; font-size: 1.05rem; min-height: 1.5em; }
+/* ── Inverse sonification result ── */
+#hum-result {
+  font-weight: 700;
+  font-size: 1.05rem;
+  min-height: 1.5em;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--blue-50);
+  border: 1px solid var(--blue-100, #dbeafe);
+  color: var(--blue-800);
+  margin-top: 0.5rem;
+}
+#hum-result:empty { display: none; }
 
 /* ── High-contrast overrides ── */
-body.high-contrast .braille-row { background: #000; border: 1px solid #fff; }
-body.high-contrast .braille-cell--active { color: #ffff00; }
+body.high-contrast #braille-panel { background: #000; border: 1px solid #fff; }
+body.high-contrast .braille-row   { background: #000; border: 1px solid #333; }
+body.high-contrast .braille-cell--active { color: #ffff00; text-shadow: none; }
 body.high-contrast .voice-bar { background: #000; border-bottom: 2px solid #ffff00; }
+body.high-contrast #hum-result { background: #000; border-color: #ffff00; color: #fff; }

@@ -1,21 +1,130 @@
 /* High-contrast theme — meets WCAG 2.1 AAA (7:1) for all text */
 body.high-contrast {
-  --color-bg: #000000;
-  --color-text: #ffffff;
-  --color-primary: #ffff00;
-  --color-primary-hover: #e6e600;
-  --color-accent: #00ffff;
-  --color-surface: #1a1a1a;
-  --color-border: #ffffff;
-  --color-focus: #00ffff;
-  --color-focus-bg: #003333;
+  --color-bg:           #000000;
+  --color-surface:      #111111;
+  --color-surface-2:    #1a1a1a;
+  --color-text:         #ffffff;
+  --color-text-muted:   #cccccc;
+  --color-primary:      #ffff00;
+  --color-primary-dark: #e6e600;
+  --color-accent:       #00ffff;
+  --color-border:       #ffffff;
+  --color-focus:        #00ffff;
+  --color-focus-bg:     #003333;
 }
 
-body.high-contrast header { background: #000; border-bottom: 2px solid #ffff00; }
-body.high-contrast header h1 { color: #ffff00; }
-body.high-contrast nav { background: #1a1a1a; border-bottom: 2px solid #fff; }
+body.high-contrast header {
+  background: #000;
+  border-bottom: 2px solid #ffff00;
+}
+body.high-contrast header h1 {
+  background: none;
+  -webkit-text-fill-color: #ffff00;
+  color: #ffff00;
+}
+body.high-contrast .tagline { color: #ccc; }
+body.high-contrast .header-controls button {
+  background: #111;
+  border-color: #ffff00;
+  color: #ffff00;
+}
+
+body.high-contrast nav {
+  background: #111;
+  border-bottom: 2px solid #fff;
+}
 body.high-contrast nav a { color: #ffff00; }
-body.high-contrast button { background: #ffff00; color: #000; }
-body.high-contrast button:hover:not(:disabled) { background: #e6e600; }
-body.high-contrast code { background: #333; color: #fff; }
-body.high-contrast .eq-highlight { background: #003300; outline-color: #00ff00; }
+body.high-contrast nav a:hover { background: #001a1a; border-bottom-color: #00ffff; }
+
+body.high-contrast section {
+  background: #111;
+  border-color: #fff;
+}
+body.high-contrast section::before { background: #ffff00; }
+body.high-contrast section h2 { color: #ffff00; }
+body.high-contrast section h2::before { background: #ffff00; }
+
+body.high-contrast button {
+  background: #ffff00;
+  color: #000;
+  border: none;
+  box-shadow: none;
+}
+body.high-contrast button:hover:not(:disabled) {
+  background: #e6e600;
+  box-shadow: none;
+}
+body.high-contrast #btn-stop,
+body.high-contrast #btn-hum-stop,
+body.high-contrast #btn-stop-camera,
+body.high-contrast #btn-voice-stop {
+  background: #330000;
+  color: #ff6b6b;
+  border-color: #ff6b6b;
+}
+
+body.high-contrast input[type="text"],
+body.high-contrast input[type="file"] {
+  background: #000;
+  border-color: #fff;
+  color: #fff;
+}
+
+body.high-contrast code {
+  background: #1a1a1a;
+  color: #00ffff;
+  border-color: #555;
+}
+body.high-contrast kbd {
+  background: #000;
+  border-color: #ffff00;
+  color: #ffff00;
+}
+
+body.high-contrast .control-panel {
+  background: #0a0a0a;
+  border-color: #555;
+}
+body.high-contrast .control-panel h3 { color: #aaa; }
+
+body.high-contrast .eq-display {
+  background: #000;
+  border-color: #fff;
+}
+body.high-contrast .eq-highlight {
+  background: #003300;
+  outline-color: #00ff00;
+}
+body.high-contrast .cursor-desc {
+  background: #001a1a;
+  border-color: #00ffff;
+  color: #fff;
+}
+
+body.high-contrast .btn-sample {
+  background: #000;
+  color: #ffff00;
+  border-color: #ffff00;
+}
+
+body.high-contrast footer {
+  background: #000;
+  color: #aaa;
+  border-top: 1px solid #333;
+}
+
+body.high-contrast .data-summary {
+  background: #0a0a0a;
+  border-color: #333;
+  color: #ccc;
+}
+body.high-contrast details {
+  background: #0a0a0a;
+  border-color: #555;
+}
+body.high-contrast summary { color: #ffff00; }
+body.high-contrast #headphones-prompt {
+  background: #111;
+  border-color: #ffff00;
+  color: #fff;
+}
