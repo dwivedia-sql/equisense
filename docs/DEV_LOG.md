@@ -28,6 +28,39 @@
 
 ---
 
+## 2026-05-09 — Aarav (EquiSense 2.0 — all three features)
+
+**Feature 1: HRTF Spatial Audio**
+- Refactored `audio-engine.js`: added `initSpatialAudio`, `createSpatialCue` (HRTF PannerNode), `playSpatialTone`, `detectHeadphones`
+- Created `equation-navigator/spatial-mapping.js`: role-to-3D-offset table, `getNodeRole` (parent-child relationship analysis), `composePosition` (path walker summing deltas)
+- Updated `equation-navigator/cues.js`: replaced `StereoPannerNode` with HRTF PannerNode chain via `playSpatialTone`
+- Decision: use `StereoPannerNode` for graph sonifier (left-right sweep is intentional) but HRTF for equation navigator (structural 3D cues are the point)
+- Added headphones detection prompt using `navigator.mediaDevices.enumerateDevices()`
+
+**Feature 2: Statistical Pre-Analysis + NLG**
+- Created `data-analysis/stats.js`: `computeStats`, `linearRegression` with R² computation, `detectOutliers` with z-score and IQR methods
+- Created `data-analysis/fft.js`: Cooley-Tukey radix-2 FFT from scratch — bit-reverse permutation, butterfly stages, Hann window, magnitude spectrum, `analyzeSpectrum` pipeline
+- Created `data-analysis/pattern-detect.js`: decision tree classifier — linear (R²>0.95) → sinusoidal (dominant FFT bin) → exponential (log-linear R²) → scatter (high CV)
+- Created `data-analysis/nlg.js`: slot-filling template engine, one template per pattern class
+- Updated `main.js`: NLG description spoken via Web Speech API before audio playback begins (TTS `onend` triggers audio start)
+
+**Feature 3: Camera-Based Math Capture**
+- Created `camera-capture/camera.js`: `getUserMedia` with environment-facing fallback, grayscale+contrast-stretch preprocessing
+- Created `camera-capture/math-cleanup.js`: OCR misread correction table, `clusterTokensByLine` (tolerance-band baseline grouping), `detectVerticalRole` (y-center deviation from line median), `detectFractionBars` (pixel-level horizontal dark run detection), `assembleLatexFromStructure`
+- Created `workers/ocr.worker.js`: Tesseract.js in a Web Worker via `OffscreenCanvas`, pre-warmed on page load
+- Created `camera-capture/ocr-worker.js`: client-side worker wrapper with ArrayBuffer transfer for zero-copy
+- Created `camera-capture/viewfinder.js`: camera state machine UI (idle→active→capturing→processing→success/error)
+- Added camera section to `index.html`, image upload fallback, confidence badge, "Load into Navigator" flow
+
+**Docs & Tests**
+- Created `docs/PRESENTATION.md`: full 7-minute script with timing, speaker notes, rehearsal checklist
+- Created `docs/CODE_DEFENSE.md`: per-person interview prep with anticipated judge questions
+- Created `tests/accessibility-checklist.md`: 9-section manual test protocol
+- Created `tests/fft-test-vectors.md`: 5 runnable console tests with expected outputs
+- Bug fix: `theme-high-contrast.css` was not linked in `index.html` — high-contrast toggle was silently broken
+
+---
+
 <!-- Template for future entries:
 
 ## YYYY-MM-DD — [Name]
