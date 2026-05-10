@@ -14,6 +14,16 @@ TSA Software Development 2026 — Theme: Accessibility for vision or hearing dis
 
 **Tactile Export** — Download an embosser-optimised SVG of the current graph with bold outlines and Braille tick labels, suitable for Tiger/ViewPlus embossers.
 
+## Start Here
+
+If this is your first time opening the app, use this path:
+
+1. Load a sample dataset in **Graph Sonifier** to understand the playback flow.
+2. Paste a simple LaTeX equation into **Equation Navigator** and move through it with the arrow keys.
+3. Try **Camera Capture** if you want OCR, or **Inverse Sonification** if you want to hum a curve into an equation.
+
+The top-of-page **Start Here** section mirrors this path inside the app.
+
 ---
 
 ## How to Run
@@ -37,13 +47,19 @@ The app loads MathJax, Papa Parse, and D3 from CDN on first load, then caches th
 |-----|--------|
 | `↑` | Move to parent node |
 | `↓` | Move to first child node |
-| `→` | Next sibling |
-| `←` | Previous sibling |
-| `Space` | Speak current node |
-| `R` | Read full equation aloud |
+| `→` | Move to next sibling |
+| `←` | Move to previous sibling |
+| `Space` | Speak the current node |
+| `R` | Read the full equation aloud |
 
 ### Graph Sonifier
-Use the Play / Stop / Replay buttons. Playback duration is adjustable (2–15 seconds).
+Use the sample datasets if you want a quick demo, then use Play / Stop / Replay. Playback duration is adjustable (2–15 seconds).
+
+### Camera Capture
+Start the camera, line up one equation in the viewfinder, then capture it. If the camera is unavailable, upload a JPG or PNG instead.
+
+### Voice Commands
+Turn voice commands on after you have the basics. Say `help` to hear the available commands.
 
 ### Global
 | Key | Action |

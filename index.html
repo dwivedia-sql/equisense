@@ -55,8 +55,11 @@
 
   <header role="banner">
     <div class="header-inner">
-      <h1>EquiSense</h1>
-      <p class="tagline">Accessible math &amp; data for blind and low-vision STEM students</p>
+      <div class="header-copy">
+        <h1>EquiSense</h1>
+        <p class="tagline">Accessible math &amp; data for blind and low-vision STEM students</p>
+        <p class="hero-note">Start with a sample, then move into your own equation, camera capture, or voice commands.</p>
+      </div>
       <div class="header-controls">
         <button id="btn-high-contrast" aria-pressed="false">High Contrast</button>
         <button id="btn-font-increase" aria-label="Increase font size">A+</button>
@@ -77,6 +80,7 @@
 
   <nav aria-label="Main navigation">
     <ul>
+      <li><a href="#section-start">Start Here</a></li>
       <li><a href="#section-inverse">Inverse Sonification</a></li>
       <li><a href="#section-camera">Camera Capture</a></li>
       <li><a href="#section-equation">Equation Navigator</a></li>
@@ -88,13 +92,53 @@
   <main id="main-content">
 
     <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- START HERE                                                -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section id="section-start" aria-labelledby="start-heading">
+      <h2 id="start-heading">Start here</h2>
+      <p>
+        Choose one path below. If this is your first time on the page, the fastest
+        way in is to load a sample graph, then try equation navigation or camera OCR.
+      </p>
+
+      <div class="start-grid">
+        <article class="start-card">
+          <p class="start-kicker">Quick win</p>
+          <h3>Hear a graph first</h3>
+          <p>Load a sample dataset to hear how playback, analysis, and tactile export fit together.</p>
+          <a href="#section-graph" class="start-link">Open Graph Sonifier</a>
+        </article>
+
+        <article class="start-card">
+          <p class="start-kicker">Best for equations</p>
+          <h3>Navigate math step by step</h3>
+          <p>Paste a LaTeX equation and use the arrow keys to move through the structure.</p>
+          <a href="#section-equation" class="start-link">Open Equation Navigator</a>
+        </article>
+
+        <article class="start-card">
+          <p class="start-kicker">Fast capture</p>
+          <h3>Use the camera or voice</h3>
+          <p>Capture printed math from a camera or turn on voice commands after you know the basics.</p>
+          <a href="#section-camera" class="start-link">Open Camera Capture</a>
+        </article>
+      </div>
+
+      <div class="start-actions" role="group" aria-label="Primary actions">
+        <a href="#section-graph" class="start-action">Try sample data</a>
+        <a href="#section-equation" class="start-action">Enter an equation</a>
+        <a href="#section-camera" class="start-action">Scan printed math</a>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
     <!-- INVERSE SONIFICATION                                       -->
     <!-- ══════════════════════════════════════════════════════════ -->
     <section id="section-inverse" aria-labelledby="inverse-heading">
       <h2 id="inverse-heading">Inverse Sonification</h2>
       <p>
-        Hum or sing a curve — the pitch contour of your voice becomes data.
-        EquiSense fits the best-matching equation and loads it into the navigator.
+        Hum or sing a curve. EquiSense listens to the pitch contour, fits the closest
+        matching equation, and sends it straight into the navigator.
       </p>
       <div class="control-panel">
         <div class="playback-buttons" role="group" aria-label="Inverse sonification controls">
@@ -112,9 +156,8 @@
     <section id="section-camera" aria-labelledby="camera-heading">
       <h2 id="camera-heading">Camera Math Capture</h2>
       <p>
-        Point your camera at a printed equation. EquiSense captures the frame,
-        runs OCR, reconstructs the math structure, and loads it into the
-        Equation Navigator automatically.
+        Point the camera at one printed equation at a time. EquiSense captures the
+        frame, runs OCR, rebuilds the math structure, and loads it into the navigator.
       </p>
 
       <div id="camera-viewfinder">
@@ -138,7 +181,7 @@
       </div>
 
       <details>
-        <summary>No camera? Upload an image instead</summary>
+        <summary>No camera? Upload a math image instead</summary>
         <div class="input-group" style="margin-top:0.75rem">
           <label for="image-upload">Image file (JPG or PNG)</label>
           <input id="image-upload" type="file" accept="image/*" />
@@ -152,9 +195,9 @@
     <section id="section-equation" aria-labelledby="eq-heading">
       <h2 id="eq-heading">Equation Navigator</h2>
       <p>
-        Paste a LaTeX equation below and navigate its mathematical structure
-        using the keyboard. Audio cues use full 3D HRTF spatial audio —
-        numerators float above, denominators below, superscripts to the right.
+        Paste a LaTeX equation below and use the keyboard or buttons to move through
+        its structure. Audio cues use spatial audio so numerators, denominators, and
+        powers land in different places.
       </p>
 
       <div class="input-group">
@@ -166,7 +209,7 @@
           aria-describedby="latex-hint"
         />
         <p id="latex-hint" class="hint">
-          Example: <code>\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}</code>
+          Try a simple fraction or the quadratic formula if you want a ready-made test.
         </p>
         <button id="btn-parse-eq">Load Equation</button>
       </div>
@@ -175,12 +218,8 @@
 
       <div id="eq-controls" class="control-panel" hidden>
         <p class="keyboard-guide">
-          <kbd>↑</kbd> parent &nbsp;
-          <kbd>↓</kbd> first child &nbsp;
-          <kbd>←</kbd> prev sibling &nbsp;
-          <kbd>→</kbd> next sibling &nbsp;
-          <kbd>Space</kbd> speak node &nbsp;
-          <kbd>R</kbd> read full equation
+          Use <kbd>↑</kbd> to go up, <kbd>↓</kbd> to go deeper, <kbd>←</kbd>/<kbd>→</kbd> to move sideways,
+          <kbd>Space</kbd> to speak the current node, and <kbd>R</kbd> to read the whole equation.
         </p>
         <button id="btn-speak-full">Read Full Equation (R)</button>
         <p id="eq-cursor-description" aria-live="polite" class="cursor-desc"></p>
@@ -201,7 +240,7 @@
       <!-- Voice command toggle -->
       <div style="margin-top:1rem">
         <button id="btn-voice-start">Enable Voice Commands</button>
-        <p class="hint" style="margin-top:0.4rem">Say "help" to hear all available commands.</p>
+        <p class="hint" style="margin-top:0.4rem">Use the page with buttons first; say "help" when you want the full command list.</p>
       </div>
     </section>
 
@@ -211,14 +250,14 @@
     <section id="section-graph" aria-labelledby="graph-heading">
       <h2 id="graph-heading">Graph Sonifier</h2>
       <p>
-        Upload a two-column CSV (x, y) and listen to the data as audio.
-        EquiSense analyzes the pattern, announces a description, then plays.
+        Upload a two-column CSV (x, y) and listen to the data as audio. EquiSense
+        announces a short description first, then plays the trend so you know what to expect.
       </p>
 
       <div class="input-group">
         <label for="csv-upload">CSV file</label>
         <input id="csv-upload" type="file" accept=".csv" />
-        <p class="hint">Or load a sample:</p>
+        <p class="hint">If you're unsure where to begin, load one of the sample datasets below.</p>
         <div class="sample-buttons" role="group" aria-label="Sample datasets">
           <button class="btn-sample" data-file="assets/sample-data/linear.csv">Linear</button>
           <button class="btn-sample" data-file="assets/sample-data/sinusoidal.csv">Sinusoidal</button>
@@ -250,11 +289,11 @@
     <section id="section-tactile" aria-labelledby="tactile-heading">
       <h2 id="tactile-heading">Tactile Export</h2>
       <p>
-        Download an embosser-optimised SVG of the current graph — suitable for
-        Tiger embossers and similar tactile graphics hardware.
+        Download an embosser-optimised SVG of the current graph. The output is
+        suitable for Tiger embossers and similar tactile graphics hardware.
       </p>
       <button id="btn-export-tactile" disabled>Download Tactile SVG</button>
-      <p class="hint">Load and play a dataset in the Graph Sonifier first.</p>
+      <p class="hint">Load a dataset in the Graph Sonifier first so the export has something to render.</p>
     </section>
 
   </main>
