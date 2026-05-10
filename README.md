@@ -33,6 +33,9 @@ starter equation, camera, and advanced tools.
 Each core section also has a small workflow bar with the usual next step and a
 reset action, so users can recover quickly without hunting through the page.
 
+The optional voice and inverse-sonification tools are tucked into a collapsed
+drawer at the bottom of the page instead of sitting in the main navigation.
+
 The top-of-page **Start Here** section mirrors this path inside the app.
 
 ---

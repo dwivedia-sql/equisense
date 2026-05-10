@@ -85,7 +85,6 @@
       <li><a href="#section-equation">Equation Navigator</a></li>
       <li><a href="#section-graph">Graph Sonifier</a></li>
       <li><a href="#section-tactile">Tactile Export</a></li>
-      <li><a href="#section-advanced">Advanced Tools</a></li>
     </ul>
   </nav>
 
@@ -138,7 +137,7 @@
         <button class="start-action" id="btn-start-launcher-graph">Use sample data</button>
         <button class="start-action" id="btn-start-launcher-equation">Use starter equation</button>
         <button class="start-action" id="btn-start-launcher-camera">Scan printed math</button>
-        <button class="start-action" id="btn-start-launcher-advanced">Open advanced tools</button>
+        <button class="start-action start-action--secondary" id="btn-start-launcher-advanced">Optional tools</button>
         <button class="start-action start-action--secondary" id="btn-reset-workspace">Reset workspace</button>
       </div>
     </section>
@@ -304,11 +303,11 @@
     <!-- ══════════════════════════════════════════════════════════ -->
     <!-- ADVANCED TOOLS                                            -->
     <!-- ══════════════════════════════════════════════════════════ -->
-    <section id="section-advanced" aria-labelledby="advanced-heading">
-      <h2 id="advanced-heading">Advanced tools</h2>
+    <details id="section-advanced" class="advanced-shell" aria-labelledby="advanced-heading">
+      <summary id="advanced-heading">Optional tools</summary>
       <p>
-        These tools are still available, but they are optional and more experimental.
-        Use them if you want to go beyond the core graph, equation, and camera flows.
+        These tools are still available, but they are secondary to the core workflows.
+        Use them if you want to go beyond the graph, equation, and camera flows.
       </p>
 
       <div class="advanced-grid">
@@ -330,7 +329,7 @@
           <p class="hint" style="margin-top:0.4rem">Buttons first, voice second.</p>
         </article>
       </div>
-    </section>
+    </details>
 
   </main>
 

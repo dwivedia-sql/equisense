@@ -339,6 +339,50 @@ section > p:first-of-type {
 
 #section-advanced::before { background: linear-gradient(180deg, #475569, #94a3b8); }
 
+.advanced-shell {
+  background: linear-gradient(180deg, #fcfcfd 0%, #f8fafc 100%);
+  border-radius: calc(var(--radius-xl) + 2px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 0;
+}
+
+.advanced-shell > summary {
+  padding: 1.35rem 2rem;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--slate-900);
+  list-style: none;
+}
+
+.advanced-shell > summary::before {
+  content: '▸';
+  margin-right: 0.65rem;
+  color: var(--slate-500);
+  transition: transform var(--transition);
+}
+
+.advanced-shell[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.advanced-shell > p,
+.advanced-shell > .advanced-grid {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.advanced-shell > p {
+  color: var(--color-text-muted);
+  font-size: 0.96rem;
+  line-height: 1.7;
+  margin-bottom: 0.8rem;
+}
+
+.advanced-shell > .advanced-grid {
+  padding-bottom: 1.8rem;
+}
+
 .start-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

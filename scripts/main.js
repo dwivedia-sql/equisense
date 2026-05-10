@@ -137,7 +137,11 @@ function initStartLauncher() {
   });
 
   document.getElementById('btn-start-launcher-advanced')?.addEventListener('click', () => {
-    document.getElementById('section-advanced')?.scrollIntoView({ behavior: 'smooth' });
+    const advanced = document.getElementById('section-advanced');
+    if (advanced) {
+      advanced.open = true;
+      advanced.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   });
 }
 
