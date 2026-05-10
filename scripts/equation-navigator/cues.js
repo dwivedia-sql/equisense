@@ -1,40 +1,38 @@
 /**
  * cues.js
- * Spatial audio cues for tree position feedback.
+ * HRTF spatial audio cues for tree position feedback.
  *
- * Pan mapping:
- *   msup (superscript) → pans right (+0.6)
- *   msub (subscript)   → pans left  (-0.6)
- *   all others         → neutral     (0)
+ * Replaces the stereo StereoPannerNode approach with a full
+ * 3D PannerNode chain via audio-engine's HRTF utilities.
  *
- * Pitch mapping:
- *   root = 440 Hz, each level deeper adds 50 Hz
- *
- * Tone shape:
- *   entering a structure → sine (smooth)
- *   leaving (moving up)  → sawtooth (edgy)
+ * Pitch: root = 440 Hz, each depth level adds 50 Hz.
+ * Tone shape: entering = sine, leaving = sawtooth, sibling = triangle.
  */
 
-import { playPositionalCue } from '../audio-engine.js';
+import { getAudioContext, initSpatialAudio, playSpatialTone } from '../audio-engine.js';
+import { composePosition } from './spatial-mapping.js';
 
-const BASE_FREQ  = 440;
-const FREQ_STEP  = 50;
-
-const TAG_PAN = {
-  msup: 0.65,
-  msub: -0.65,
-};
+const BASE_FREQ = 440;
+const FREQ_STEP = 50;
 
 /**
- * @param {number} depth      Tree depth of current node (0 = root)
- * @param {string} tag        MathML tag of current node
- * @param {'enter'|'exit'|'sibling'} direction  Movement type
+ * Play a 3D spatial navigation cue.
+ *
+ * @param {object} currentNode  AST node at cursor (with .parent chain)
+ * @param {number} depth        Current tree depth
+ * @param {'enter'|'exit'|'sibling'} direction
  */
-export function playNavigationCue(depth, tag, direction) {
-  const frequency = BASE_FREQ + depth * FREQ_STEP;
-  const pan       = TAG_PAN[tag] ?? 0;
-  const type      = direction === 'exit' ? 'sawtooth' : 'sine';
-  const duration  = direction === 'sibling' ? 0.08 : 0.12;
+export function playNavigationCue(currentNode, depth, direction) {
+  const audioContext = getAudioContext();
+  initSpatialAudio(audioContext);
 
-  playPositionalCue(frequency, pan, type, duration);
+  const frequency = BASE_FREQ + depth * FREQ_STEP;
+  const position  = composePosition(currentNode);
+
+  const type     = direction === 'exit'    ? 'sawtooth'
+                 : direction === 'sibling' ? 'triangle'
+                 : 'sine';
+  const duration = direction === 'sibling' ? 0.08 : 0.13;
+
+  playSpatialTone(audioContext, position, frequency, type, duration);
 }

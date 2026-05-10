@@ -6,8 +6,9 @@
   <title>EquiSense — Accessible STEM for Blind &amp; Low-Vision Students</title>
   <link rel="stylesheet" href="styles/base.css" />
   <link rel="stylesheet" href="styles/theme-default.css" id="theme-stylesheet" />
+  <link rel="stylesheet" href="styles/camera.css" />
 
-  <!-- MathJax 3 — bundled config before load -->
+  <!-- MathJax 3 -->
   <script>
     window.MathJax = {
       tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
@@ -27,6 +28,12 @@
   <!-- Skip link: must be the very first focusable element -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
+  <!-- Headphones prompt (shown on first use of HRTF) -->
+  <div id="headphones-prompt" role="note" hidden>
+    <span>For best HRTF spatial audio: use stereo headphones.</span>
+    <button id="btn-dismiss-headphones" aria-label="Dismiss headphone reminder">Dismiss</button>
+  </div>
+
   <header role="banner">
     <div class="header-inner">
       <h1>EquiSense</h1>
@@ -45,6 +52,7 @@
 
   <nav aria-label="Main navigation">
     <ul>
+      <li><a href="#section-camera">Camera Capture</a></li>
       <li><a href="#section-equation">Equation Navigator</a></li>
       <li><a href="#section-graph">Graph Sonifier</a></li>
       <li><a href="#section-tactile">Tactile Export</a></li>
@@ -54,11 +62,55 @@
   <main id="main-content">
 
     <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- CAMERA CAPTURE                                             -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section id="section-camera" aria-labelledby="camera-heading">
+      <h2 id="camera-heading">Camera Math Capture</h2>
+      <p>
+        Point your camera at a printed equation. EquiSense captures the frame,
+        runs OCR, reconstructs the math structure, and loads it into the
+        Equation Navigator automatically.
+      </p>
+
+      <div id="camera-viewfinder">
+        <div class="camera-controls" role="group" aria-label="Camera controls">
+          <button id="btn-start-camera">Start Camera</button>
+          <button id="btn-stop-camera" disabled>Stop Camera</button>
+          <button id="btn-capture" disabled>Capture Equation</button>
+        </div>
+
+        <div class="camera-live-area" aria-hidden="true">
+          <video id="camera-video" playsinline muted aria-label="Camera viewfinder"></video>
+          <div class="camera-guide-overlay">
+            <div class="camera-guide-box" title="Position equation inside this box"></div>
+          </div>
+        </div>
+
+        <canvas id="camera-preview-canvas" hidden aria-label="Captured frame preview"></canvas>
+        <p id="camera-status" aria-live="polite"></p>
+
+        <div id="camera-result" hidden></div>
+      </div>
+
+      <details>
+        <summary>No camera? Upload an image instead</summary>
+        <div class="input-group" style="margin-top:0.75rem">
+          <label for="image-upload">Image file (JPG or PNG)</label>
+          <input id="image-upload" type="file" accept="image/*" />
+        </div>
+      </details>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
     <!-- EQUATION NAVIGATOR                                         -->
     <!-- ══════════════════════════════════════════════════════════ -->
     <section id="section-equation" aria-labelledby="eq-heading">
       <h2 id="eq-heading">Equation Navigator</h2>
-      <p>Paste a LaTeX equation below and navigate its structure using the keyboard.</p>
+      <p>
+        Paste a LaTeX equation below and navigate its mathematical structure
+        using the keyboard. Audio cues use full 3D HRTF spatial audio —
+        numerators float above, denominators below, superscripts to the right.
+      </p>
 
       <div class="input-group">
         <label for="latex-input">LaTeX equation</label>
@@ -97,7 +149,10 @@
     <!-- ══════════════════════════════════════════════════════════ -->
     <section id="section-graph" aria-labelledby="graph-heading">
       <h2 id="graph-heading">Graph Sonifier</h2>
-      <p>Upload a two-column CSV (x, y) and listen to the data as audio.</p>
+      <p>
+        Upload a two-column CSV (x, y) and listen to the data as audio.
+        EquiSense analyzes the pattern, announces a description, then plays.
+      </p>
 
       <div class="input-group">
         <label for="csv-upload">CSV file</label>
@@ -107,6 +162,7 @@
           <button class="btn-sample" data-file="assets/sample-data/linear.csv">Linear</button>
           <button class="btn-sample" data-file="assets/sample-data/sinusoidal.csv">Sinusoidal</button>
           <button class="btn-sample" data-file="assets/sample-data/exponential.csv">Exponential</button>
+          <button class="btn-sample" data-file="assets/sample-data/outliers.csv">With Outliers</button>
         </div>
       </div>
 
@@ -124,6 +180,7 @@
 
       <div id="chart-container" aria-label="Line chart of uploaded data"></div>
       <p id="graph-data-summary" aria-live="polite" class="data-summary"></p>
+      <p id="graph-analysis-result" aria-live="polite" class="data-summary" style="font-style:italic"></p>
     </section>
 
     <!-- ══════════════════════════════════════════════════════════ -->
