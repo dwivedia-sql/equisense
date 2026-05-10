@@ -27,6 +27,9 @@ use this path:
 3. Try **Camera Capture** if you want OCR.
 4. Open **Advanced Tools** only if you want inverse humming or voice control.
 
+The landing section also includes one-click launch buttons for the sample graph,
+starter equation, camera, and advanced tools.
+
 The top-of-page **Start Here** section mirrors this path inside the app.
 
 ---

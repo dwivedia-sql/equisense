@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initVoiceCommands();
   initBraillePanel();
   initInverseSonification();
+  initStartLauncher();
   loadDefaultWorkspace().catch(err => console.warn('Default workspace failed to load', err));
   showHeadphonesPromptIfNeeded();
   prewarmOCRWorker();
@@ -87,10 +88,7 @@ async function showHeadphonesPromptIfNeeded() {
 
 async function loadDefaultWorkspace() {
   const defaultSampleSource = localStorage.getItem(STORAGE_KEYS.sampleSource) || DEFAULT_SAMPLE_DATA;
-  const samplePoints = await parseCSVFromURL(defaultSampleSource).catch(() => null);
-  if (samplePoints?.length) {
-    applyData(samplePoints, { announce: false });
-  }
+  await loadGraphFromSource(defaultSampleSource, { announce: false, persistSampleSource: false });
 
   const input = document.getElementById('latex-input');
   const savedEquation = localStorage.getItem(STORAGE_KEYS.equation) || DEFAULT_EQUATION;
@@ -101,6 +99,45 @@ async function loadDefaultWorkspace() {
   if ((input?.value || savedEquation).trim()) {
     await loadEquation(input?.value?.trim() || savedEquation, { announce: false, focus: false, persistEquation: false });
   }
+}
+
+// ── Start launcher ──────────────────────────────────────────────────────────
+
+function initStartLauncher() {
+  document.getElementById('btn-start-sample-graph')?.addEventListener('click', () => {
+    const sampleSource = localStorage.getItem(STORAGE_KEYS.sampleSource) || DEFAULT_SAMPLE_DATA;
+    loadGraphFromSource(sampleSource, {
+      announce: true,
+      persistSampleSource: false,
+    });
+    document.getElementById('section-graph')?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  document.getElementById('btn-start-equation')?.addEventListener('click', async () => {
+    await loadEquation(DEFAULT_EQUATION, { announce: true, focus: true, persistEquation: false });
+    document.getElementById('section-equation')?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  document.getElementById('btn-start-camera-quick')?.addEventListener('click', () => {
+    document.getElementById('section-camera')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('btn-start-camera')?.focus();
+  });
+
+  document.getElementById('btn-start-launcher-graph')?.addEventListener('click', () => {
+    document.getElementById('btn-start-sample-graph')?.click();
+  });
+
+  document.getElementById('btn-start-launcher-equation')?.addEventListener('click', () => {
+    document.getElementById('btn-start-equation')?.click();
+  });
+
+  document.getElementById('btn-start-launcher-camera')?.addEventListener('click', () => {
+    document.getElementById('btn-start-camera-quick')?.click();
+  });
+
+  document.getElementById('btn-start-launcher-advanced')?.addEventListener('click', () => {
+    document.getElementById('section-advanced')?.scrollIntoView({ behavior: 'smooth' });
+  });
 }
 
 // ── Equation Navigator ───────────────────────────────────────────────────────

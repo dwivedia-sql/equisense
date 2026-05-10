@@ -394,6 +394,10 @@ section > p:first-of-type {
   transition: transform var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition);
 }
 
+.start-link {
+  appearance: none;
+}
+
 .start-link:hover,
 .start-action:hover {
   transform: translateY(-1px);
@@ -406,6 +410,13 @@ section > p:first-of-type {
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
+}
+
+.start-actions-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
 }
 
 .start-action {

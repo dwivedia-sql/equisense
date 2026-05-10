@@ -107,28 +107,38 @@
           <p class="start-kicker">Quick win</p>
           <h3>Hear a graph first</h3>
           <p>Load a sample dataset to hear how playback, analysis, and tactile export fit together.</p>
-          <a href="#section-graph" class="start-link">Open Graph Sonifier</a>
+          <div class="start-actions-inline">
+            <button class="start-link" id="btn-start-sample-graph">Load sample graph</button>
+            <a href="#section-graph" class="start-link">Open Graph Sonifier</a>
+          </div>
         </article>
 
         <article class="start-card">
           <p class="start-kicker">Best for equations</p>
           <h3>Navigate math step by step</h3>
           <p>Paste a LaTeX equation and use the arrow keys to move through the structure.</p>
-          <a href="#section-equation" class="start-link">Open Equation Navigator</a>
+          <div class="start-actions-inline">
+            <button class="start-link" id="btn-start-equation">Load starter equation</button>
+            <a href="#section-equation" class="start-link">Open Equation Navigator</a>
+          </div>
         </article>
 
         <article class="start-card">
           <p class="start-kicker">Fast capture</p>
           <h3>Use the camera or voice</h3>
           <p>Capture printed math from a camera, then use advanced tools only if you want the extra controls.</p>
-          <a href="#section-camera" class="start-link">Open Camera Capture</a>
+          <div class="start-actions-inline">
+            <button class="start-link" id="btn-start-camera-quick">Start camera</button>
+            <a href="#section-camera" class="start-link">Open Camera Capture</a>
+          </div>
         </article>
       </div>
 
       <div class="start-actions" role="group" aria-label="Primary actions">
-        <a href="#section-graph" class="start-action">Try sample data</a>
-        <a href="#section-equation" class="start-action">Enter an equation</a>
-        <a href="#section-camera" class="start-action">Scan printed math</a>
+        <button class="start-action" id="btn-start-launcher-graph">Use sample data</button>
+        <button class="start-action" id="btn-start-launcher-equation">Use starter equation</button>
+        <button class="start-action" id="btn-start-launcher-camera">Scan printed math</button>
+        <button class="start-action" id="btn-start-launcher-advanced">Open advanced tools</button>
       </div>
     </section>
 
