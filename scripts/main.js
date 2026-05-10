@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initBraillePanel();
   initInverseSonification();
   initStartLauncher();
+  initWorkflowActions();
   loadDefaultWorkspace().catch(err => console.warn('Default workspace failed to load', err));
   showHeadphonesPromptIfNeeded();
   prewarmOCRWorker();
@@ -138,6 +139,74 @@ function initStartLauncher() {
   document.getElementById('btn-start-launcher-advanced')?.addEventListener('click', () => {
     document.getElementById('section-advanced')?.scrollIntoView({ behavior: 'smooth' });
   });
+}
+
+function initWorkflowActions() {
+  document.getElementById('btn-load-linear-sample')?.addEventListener('click', () => {
+    loadGraphFromSource('assets/sample-data/linear.csv', { announce: true, persistSampleSource: true });
+  });
+
+  document.getElementById('btn-load-sinusoidal-sample')?.addEventListener('click', () => {
+    loadGraphFromSource('assets/sample-data/sinusoidal.csv', { announce: true, persistSampleSource: true });
+  });
+
+  document.getElementById('btn-reset-graph')?.addEventListener('click', () => {
+    loadGraphFromSource(DEFAULT_SAMPLE_DATA, { announce: true, persistSampleSource: true });
+  });
+
+  document.getElementById('btn-load-starter-equation')?.addEventListener('click', () => {
+    loadEquation(DEFAULT_EQUATION, { announce: true, focus: true, persistEquation: true });
+    document.getElementById('section-equation')?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  document.getElementById('btn-clear-equation')?.addEventListener('click', clearEquationWorkspace);
+  document.getElementById('btn-reload-current-equation')?.addEventListener('click', () => {
+    const current = document.getElementById('latex-input')?.value.trim() || DEFAULT_EQUATION;
+    loadEquation(current, { announce: true, focus: true, persistEquation: true });
+  });
+
+  document.getElementById('btn-camera-start-quick')?.addEventListener('click', () => {
+    document.getElementById('btn-start-camera')?.click();
+  });
+
+  document.getElementById('btn-camera-stop-quick')?.addEventListener('click', () => {
+    document.getElementById('btn-stop-camera')?.click();
+  });
+
+  document.getElementById('btn-camera-reset')?.addEventListener('click', clearCameraWorkspace);
+
+  document.getElementById('btn-reset-workspace')?.addEventListener('click', resetWorkspace);
+}
+
+function clearEquationWorkspace() {
+  const input = document.getElementById('latex-input');
+  if (input) input.value = '';
+  document.getElementById('eq-rendered').innerHTML = '';
+  document.getElementById('eq-controls').hidden = true;
+  document.getElementById('braille-panel').hidden = true;
+  eqAST = null;
+  eqCursor = null;
+  announceToScreenReader('Equation cleared.');
+}
+
+function clearCameraWorkspace() {
+  stopCamera(cameraStream);
+  cameraStream = null;
+  const result = document.getElementById('camera-result');
+  const preview = document.getElementById('camera-preview-canvas');
+  if (result) result.hidden = true;
+  if (preview) preview.hidden = true;
+  showCaptureFeedback('idle');
+  document.getElementById('btn-capture').disabled = true;
+  announceToScreenReader('Camera capture reset.');
+}
+
+async function resetWorkspace() {
+  await loadGraphFromSource(DEFAULT_SAMPLE_DATA, { announce: false, persistSampleSource: true });
+  await loadEquation(DEFAULT_EQUATION, { announce: false, focus: false, persistEquation: true });
+  clearCameraWorkspace();
+  document.getElementById('section-start')?.scrollIntoView({ behavior: 'smooth' });
+  announceToScreenReader('Workspace reset to the starter graph and equation.');
 }
 
 // ── Equation Navigator ───────────────────────────────────────────────────────

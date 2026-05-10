@@ -30,6 +30,9 @@ use this path:
 The landing section also includes one-click launch buttons for the sample graph,
 starter equation, camera, and advanced tools.
 
+Each core section also has a small workflow bar with the usual next step and a
+reset action, so users can recover quickly without hunting through the page.
+
 The top-of-page **Start Here** section mirrors this path inside the app.
 
 ---

@@ -139,6 +139,7 @@
         <button class="start-action" id="btn-start-launcher-equation">Use starter equation</button>
         <button class="start-action" id="btn-start-launcher-camera">Scan printed math</button>
         <button class="start-action" id="btn-start-launcher-advanced">Open advanced tools</button>
+        <button class="start-action start-action--secondary" id="btn-reset-workspace">Reset workspace</button>
       </div>
     </section>
 
@@ -151,6 +152,12 @@
         Point the camera at one printed equation at a time. EquiSense captures the
         frame, runs OCR, rebuilds the math structure, and loads it into the navigator.
       </p>
+
+      <div class="workflow-bar" role="group" aria-label="Camera quick actions">
+        <button id="btn-camera-start-quick">Start camera</button>
+        <button id="btn-camera-stop-quick" class="btn-outline">Stop camera</button>
+        <button id="btn-camera-reset" class="btn-outline">Reset capture</button>
+      </div>
 
       <div id="camera-viewfinder">
         <div class="camera-controls" role="group" aria-label="Camera controls">
@@ -191,6 +198,12 @@
         its structure. Audio cues use spatial audio so numerators, denominators, and
         powers land in different places.
       </p>
+
+      <div class="workflow-bar" role="group" aria-label="Equation quick actions">
+        <button id="btn-load-starter-equation">Load starter equation</button>
+        <button id="btn-clear-equation" class="btn-outline">Clear equation</button>
+        <button id="btn-reload-current-equation" class="btn-outline">Reload current equation</button>
+      </div>
 
       <div class="input-group">
         <label for="latex-input">LaTeX equation</label>
@@ -239,6 +252,12 @@
         Upload a two-column CSV (x, y) and listen to the data as audio. EquiSense
         announces a short description first, then plays the trend so you know what to expect.
       </p>
+
+      <div class="workflow-bar" role="group" aria-label="Graph quick actions">
+        <button id="btn-load-linear-sample">Load linear sample</button>
+        <button id="btn-load-sinusoidal-sample" class="btn-outline">Load sinusoidal sample</button>
+        <button id="btn-reset-graph" class="btn-outline">Reset graph</button>
+      </div>
 
       <div class="input-group">
         <label for="csv-upload">CSV file</label>

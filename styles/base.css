@@ -423,6 +423,27 @@ section > p:first-of-type {
   background: linear-gradient(180deg, #f8fbff, #eef6ff);
 }
 
+.start-action--secondary {
+  background: #fff;
+  color: var(--slate-700);
+}
+
+.workflow-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 1.1rem;
+  padding: 0.9rem;
+  border-radius: var(--radius-lg);
+  background: var(--slate-50);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.workflow-bar button {
+  padding: 0.55rem 0.95rem;
+  border-radius: var(--radius-pill);
+}
+
 .advanced-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
