@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="28" fill="#1a5276"/>
+  <!-- Sine wave representing sonification -->
+  <path d="M16 96 Q40 48 64 96 Q88 144 112 96 Q136 48 160 96 Q176 128 192 96"
+        fill="none" stroke="#e67e22" stroke-width="10" stroke-linecap="round"/>
+  <!-- "E" lettermark -->
+  <text x="68" y="148" font-family="system-ui,sans-serif" font-size="64"
+        font-weight="900" fill="#ffffff" letter-spacing="-2">EQ</text>
+</svg>

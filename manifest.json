@@ -1,0 +1,28 @@
+{
+  "name": "EquiSense",
+  "short_name": "EquiSense",
+  "description": "Accessible math equations and data sonification for blind and low-vision STEM students",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a5276",
+  "theme_color": "#1a5276",
+  "lang": "en",
+  "categories": ["education", "accessibility"],
+  "icons": [
+    { "src": "assets/icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "assets/icons/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Equation Navigator",
+      "url": "/#section-equation",
+      "description": "Navigate math equations with spatial audio"
+    },
+    {
+      "name": "Graph Sonifier",
+      "url": "/#section-graph",
+      "description": "Hear data as audio"
+    }
+  ]
+}

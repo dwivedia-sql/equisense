@@ -4,10 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EquiSense — Accessible STEM for Blind &amp; Low-Vision Students</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1a5276" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.svg" />
+
   <link rel="stylesheet" href="styles/base.css" />
   <link rel="stylesheet" href="styles/theme-default.css" />
   <link rel="stylesheet" href="styles/theme-high-contrast.css" />
   <link rel="stylesheet" href="styles/camera.css" />
+  <link rel="stylesheet" href="styles/braille.css" />
+
+  <!-- Service Worker registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+  </script>
 
   <!-- MathJax 3 -->
   <script>
@@ -51,8 +69,15 @@
   <div id="sr-status" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
   <div id="sr-alert"  role="alert"  aria-live="assertive" aria-atomic="true" class="sr-only"></div>
 
+  <!-- Voice command status bar -->
+  <div id="voice-status-bar" class="voice-bar" hidden>
+    <span id="voice-status-text" aria-live="polite">Listening…</span>
+    <button id="btn-voice-stop" aria-label="Stop voice commands">Stop</button>
+  </div>
+
   <nav aria-label="Main navigation">
     <ul>
+      <li><a href="#section-inverse">Inverse Sonification</a></li>
       <li><a href="#section-camera">Camera Capture</a></li>
       <li><a href="#section-equation">Equation Navigator</a></li>
       <li><a href="#section-graph">Graph Sonifier</a></li>
@@ -61,6 +86,25 @@
   </nav>
 
   <main id="main-content">
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- INVERSE SONIFICATION                                       -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section id="section-inverse" aria-labelledby="inverse-heading">
+      <h2 id="inverse-heading">Inverse Sonification</h2>
+      <p>
+        Hum or sing a curve — the pitch contour of your voice becomes data.
+        EquiSense fits the best-matching equation and loads it into the navigator.
+      </p>
+      <div class="control-panel">
+        <div class="playback-buttons" role="group" aria-label="Inverse sonification controls">
+          <button id="btn-hum-start">Start Humming</button>
+          <button id="btn-hum-stop" disabled>Stop &amp; Fit</button>
+        </div>
+        <p id="hum-status" aria-live="polite" class="hint"></p>
+        <p id="hum-result" aria-live="polite"></p>
+      </div>
+    </section>
 
     <!-- ══════════════════════════════════════════════════════════ -->
     <!-- CAMERA CAPTURE                                             -->
@@ -143,6 +187,22 @@
       </div>
 
       <div id="eq-tree-visual" aria-hidden="true" class="tree-visual"></div>
+
+      <!-- Virtual Braille display -->
+      <div id="braille-panel" class="control-panel" hidden>
+        <h3>Virtual Braille Display</h3>
+        <div id="braille-container"></div>
+        <div class="playback-buttons" style="margin-top:0.5rem" role="group" aria-label="Braille display controls">
+          <button id="btn-connect-bluetooth">Connect Physical Display</button>
+          <span id="bluetooth-status" aria-live="polite" class="hint" style="align-self:center"></span>
+        </div>
+      </div>
+
+      <!-- Voice command toggle -->
+      <div style="margin-top:1rem">
+        <button id="btn-voice-start">Enable Voice Commands</button>
+        <p class="hint" style="margin-top:0.4rem">Say "help" to hear all available commands.</p>
+      </div>
     </section>
 
     <!-- ══════════════════════════════════════════════════════════ -->

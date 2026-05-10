@@ -1,0 +1,58 @@
+/* braille.css — Virtual Braille display and voice command bar styles */
+
+/* ── Braille display ── */
+#braille-panel h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+
+.braille-row {
+  display: flex;
+  gap: 2px;
+  padding: 0.5rem 0.4rem;
+  background: #1a1a1a;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  user-select: none;
+}
+
+.braille-cell {
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #444;
+  min-width: 1.6rem;
+  text-align: center;
+  transition: color 0.1s;
+}
+
+.braille-cell--active { color: #f0f0f0; }
+
+.braille-meta {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.3rem;
+}
+
+/* ── Voice command bar ── */
+.voice-bar {
+  background: #154360;
+  color: #fff;
+  padding: 0.45rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+.voice-bar[hidden] { display: none; }
+#voice-status-text { flex: 1; }
+.voice-bar button {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* ── Inverse sonification ── */
+#hum-result { font-weight: 700; font-size: 1.05rem; min-height: 1.5em; }
+
+/* ── High-contrast overrides ── */
+body.high-contrast .braille-row { background: #000; border: 1px solid #fff; }
+body.high-contrast .braille-cell--active { color: #ffff00; }
+body.high-contrast .voice-bar { background: #000; border-bottom: 2px solid #ffff00; }

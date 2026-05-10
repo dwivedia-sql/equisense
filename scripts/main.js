@@ -1,9 +1,13 @@
 /**
  * main.js
  * Bootstrap: wires all modules together.
+ * Features: Equation Navigator, Graph Sonifier, Tactile Export,
+ *           HRTF Spatial Audio, Statistical NLG, Camera OCR,
+ *           Custom Timbre, Voice Commands, Braille Display,
+ *           Inverse Sonification, PWA/Service Worker.
  */
 
-import { initAccessibilityShell, announceToScreenReader } from './accessibility-shell.js';
+import { initAccessibilityShell, announceToScreenReader, toggleHighContrast, increaseFontSize, decreaseFontSize } from './accessibility-shell.js';
 import { getAudioContext, initSpatialAudio, detectHeadphones } from './audio-engine.js';
 
 // Equation Navigator
@@ -18,11 +22,6 @@ import { normalizeData, describeDataset } from './graph-sonifier/mapping.js';
 import { buildAudioSchedule } from './graph-sonifier/scheduler.js';
 import { renderChart, syncCursor, hideCursor } from './graph-sonifier/chart.js';
 
-// Data Analysis
-import { computeStats, linearRegression, detectOutliers } from './data-analysis/stats.js';
-import { classifyPattern } from './data-analysis/pattern-detect.js';
-import { composeDescription } from './data-analysis/nlg.js';
-
 // Camera Capture
 import { initCamera, stopCamera, captureFrame, preprocessImage } from './camera-capture/camera.js';
 import { ocrResultsToLatex } from './camera-capture/math-cleanup.js';
@@ -32,6 +31,20 @@ import { runOCR, prewarmOCRWorker } from './camera-capture/ocr-worker.js';
 // Tactile Export
 import { buildTactileSVG, downloadAsFile } from './tactile-export/svg-generator.js';
 
+// Voice Commands
+import { initSpeechInput } from './voice-commands/speech-input.js';
+import { HELP_TEXT } from './voice-commands/intent-matcher.js';
+
+// Braille Display
+import { initVirtualDisplay, updateVirtualDisplay } from './braille-display/virtual-display.js';
+import { connectBrailleDisplay, sendToBrailleDisplay, isConnected, BLUETOOTH_SUPPORTED } from './braille-display/bluetooth.js';
+import { nodeToBraille } from './braille-display/math-to-braille.js';
+
+// Inverse Sonification
+import { openMicrophone } from './inverse-sonification/microphone.js';
+import { detectPitch, classifyBuffer } from './inverse-sonification/pitch-detect.js';
+import { fitContour } from './inverse-sonification/curve-fit.js';
+
 // ── Bootstrap ────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,15 +53,17 @@ document.addEventListener('DOMContentLoaded', () => {
   initGraphSonifier();
   initTactileExport();
   initCameraCapture();
+  initVoiceCommands();
+  initBraillePanel();
+  initInverseSonification();
   showHeadphonesPromptIfNeeded();
-  prewarmOCRWorker(); // load Tesseract in background
+  prewarmOCRWorker();
 });
 
 // ── Headphones prompt ────────────────────────────────────────────────────────
 
 async function showHeadphonesPromptIfNeeded() {
-  const dismissed = localStorage.getItem('eq_headphones_dismissed');
-  if (dismissed) return;
+  if (localStorage.getItem('eq_headphones_dismissed')) return;
   const hasHeadphones = await detectHeadphones();
   if (!hasHeadphones) {
     const prompt = document.getElementById('headphones-prompt');
@@ -77,45 +92,39 @@ function initEquationNavigator() {
   });
 
   const section = document.getElementById('section-equation');
-  section.addEventListener('focusin',  () => { eqSectionFocused = true;  });
+  section.addEventListener('focusin',  () => { eqSectionFocused = true; });
   section.addEventListener('focusout', () => { eqSectionFocused = false; });
   document.addEventListener('keydown', handleEquationKey);
 }
 
 async function loadEquation(latexOverride) {
   const input = document.getElementById('latex-input');
-  const latex = latexOverride ?? input.value.trim();
+  const latex = typeof latexOverride === 'string' ? latexOverride : input.value.trim();
   if (!latex) return;
 
-  if (!latexOverride) input.value = latex; // keep field in sync when called from camera
-
+  input.value = latex;
   const display = document.getElementById('eq-rendered');
   display.innerHTML = `\\(${latex}\\)`;
 
   try {
     await MathJax.typesetPromise([display]);
-
-    // Extract MathML from MathJax's internal representation
-    const mathItem = MathJax.startup?.document?.getMathItemsWithin?.(display)?.[0];
-    const mathmlSource = mathItem?.math?.toMathML?.() ?? buildFallbackMathML(latex);
+    const mathItem     = MathJax.startup?.document?.getMathItemsWithin?.(display)?.[0];
+    const mathmlSource = mathItem?.math?.toMathML?.() ?? `<math><mrow><mtext>${latex}</mtext></mrow></math>`;
 
     eqAST    = parseMathML(mathmlSource);
     eqCursor = initCursor(eqAST);
 
     document.getElementById('eq-controls').hidden = false;
+    document.getElementById('braille-panel').hidden = false;
     updateCursorDisplay();
 
     announceToScreenReader('Equation loaded. Use arrow keys to navigate in 3D spatial audio.');
     display.setAttribute('tabindex', '-1');
     display.focus();
   } catch (err) {
-    console.error('MathJax render error', err);
+    console.error('MathJax error', err);
     announceToScreenReader('Could not parse equation. Check your LaTeX syntax.', 'assertive');
   }
-}
-
-function buildFallbackMathML(latex) {
-  return `<math><mrow><mtext>${latex}</mtext></mrow></math>`;
 }
 
 function handleEquationKey(e) {
@@ -130,31 +139,25 @@ function handleEquationKey(e) {
     case 'ArrowUp':    eqCursor = moveUp(eqCursor);    direction = 'exit';    moved = true; break;
     case 'ArrowRight': eqCursor = moveRight(eqCursor); direction = 'sibling'; moved = true; break;
     case 'ArrowLeft':  eqCursor = moveLeft(eqCursor);  direction = 'sibling'; moved = true; break;
-    case ' ':
-      e.preventDefault();
-      speakCurrentNode();
-      return;
-    case 'r': case 'R':
-      speak(fullEquationToSpeech(eqAST));
-      return;
+    case ' ':          e.preventDefault(); speakCurrentNode(); return;
+    case 'r': case 'R': speak(fullEquationToSpeech(eqAST)); return;
     default: return;
   }
 
   if (moved) {
     e.preventDefault();
     const ctx = getAudioContext();
-    initSpatialAudio(ctx); // idempotent
+    initSpatialAudio(ctx);
     const node  = currentNode(eqCursor);
     const depth = currentDepth(eqCursor);
     playNavigationCue(node, depth, direction);
     speakCurrentNode();
     updateCursorDisplay();
+    updateBrailleDisplay(node, depth, eqCursor.siblingIndex);
   }
 }
 
-function speakCurrentNode() {
-  speak(nodeToSpeech(currentNode(eqCursor)));
-}
+function speakCurrentNode() { speak(nodeToSpeech(currentNode(eqCursor))); }
 
 function updateCursorDisplay() {
   const node  = currentNode(eqCursor);
@@ -171,16 +174,32 @@ let graphData    = null;
 let graphBounds  = null;
 let schedule     = null;
 let nlgDescription = '';
+let analysisWorker = null;
+
+function getAnalysisWorker() {
+  if (!analysisWorker) {
+    analysisWorker = new Worker('workers/analysis.worker.js', { type: 'module' });
+  }
+  return analysisWorker;
+}
 
 function initGraphSonifier() {
   document.getElementById('csv-upload').addEventListener('change', async e => {
     const file = e.target.files[0];
     if (!file) return;
-    await loadAndRenderData(file);
+    const points = await parseCSV(file).catch(err => {
+      announceToScreenReader(`Error: ${err.message}`, 'assertive');
+    });
+    if (points) applyData(points);
   });
 
   document.querySelectorAll('.btn-sample').forEach(btn => {
-    btn.addEventListener('click', () => loadAndRenderDataFromURL(btn.dataset.file));
+    btn.addEventListener('click', async () => {
+      const points = await parseCSVFromURL(btn.dataset.file).catch(err => {
+        announceToScreenReader(`Error: ${err.message}`, 'assertive');
+      });
+      if (points) applyData(points);
+    });
   });
 
   document.getElementById('playback-speed').addEventListener('input', e => {
@@ -190,27 +209,8 @@ function initGraphSonifier() {
   document.getElementById('btn-play').addEventListener('click', startPlayback);
   document.getElementById('btn-stop').addEventListener('click', stopPlayback);
   document.getElementById('btn-replay').addEventListener('click', () => {
-    stopPlayback();
-    setTimeout(startPlayback, 100);
+    stopPlayback(); setTimeout(startPlayback, 100);
   });
-}
-
-async function loadAndRenderData(file) {
-  try {
-    const points = await parseCSV(file);
-    applyData(points);
-  } catch (err) {
-    announceToScreenReader(`Error: ${err.message}`, 'assertive');
-  }
-}
-
-async function loadAndRenderDataFromURL(url) {
-  try {
-    const points = await parseCSVFromURL(url);
-    applyData(points);
-  } catch (err) {
-    announceToScreenReader(`Error loading sample: ${err.message}`, 'assertive');
-  }
 }
 
 function applyData(points) {
@@ -219,38 +219,36 @@ function applyData(points) {
   graphBounds = normalized;
 
   renderChart(graphData, document.getElementById('chart-container'), graphBounds);
+  document.getElementById('graph-data-summary').textContent = describeDataset(normalized);
 
-  const summary = describeDataset(normalized);
-  document.getElementById('graph-data-summary').textContent = summary;
-
-  // Statistical pre-analysis
-  const stats      = computeStats(graphData);
-  const regression = linearRegression(graphData);
-  const outliers   = detectOutliers(graphData);
-  const { pattern, ...patternDetail } = classifyPattern(graphData, stats, regression);
-  nlgDescription = composeDescription(graphData, pattern, stats, regression, outliers, patternDetail);
-
-  document.getElementById('graph-analysis-result').textContent = `Analysis: ${nlgDescription}`;
-  announceToScreenReader(summary);
+  // Run analysis in Web Worker (Feature 9)
+  const worker = getAnalysisWorker();
+  worker.postMessage({ type: 'analyze', points: graphData });
+  worker.onmessage = (e) => {
+    if (e.data.type !== 'result') return;
+    nlgDescription = e.data.nlgDescription;
+    document.getElementById('graph-analysis-result').textContent = `Analysis: ${nlgDescription}`;
+  };
 
   document.getElementById('graph-controls').hidden = false;
   document.getElementById('btn-play').disabled   = false;
   document.getElementById('btn-replay').disabled = false;
   document.getElementById('btn-export-tactile').disabled = false;
+
+  announceToScreenReader(describeDataset(normalized));
 }
 
 function startPlayback() {
   if (!graphData) return;
-  getAudioContext(); // wake context on user gesture
+  getAudioContext();
 
   document.getElementById('btn-play').disabled = true;
   document.getElementById('btn-stop').disabled = false;
 
-  // Speak NLG description first, then start audio when TTS finishes
   if (nlgDescription && 'speechSynthesis' in window) {
     const utt = new SpeechSynthesisUtterance(nlgDescription);
     utt.rate = 0.95;
-    utt.onend = () => playAudio();
+    utt.onend = playAudio;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utt);
   } else {
@@ -285,94 +283,64 @@ function stopPlayback() {
 let cameraStream = null;
 
 function initCameraCapture() {
-  document.getElementById('btn-start-camera').addEventListener('click', startCameraFlow);
-  document.getElementById('btn-stop-camera').addEventListener('click', stopCameraFlow);
-  document.getElementById('btn-capture').addEventListener('click', captureAndOCR);
+  document.getElementById('btn-start-camera').addEventListener('click', async () => {
+    showCaptureFeedback('capturing');
+    try {
+      cameraStream = await initCamera(document.getElementById('camera-video'));
+      showCaptureFeedback('active');
+      document.getElementById('btn-capture').disabled = false;
+    } catch (err) {
+      showCaptureFeedback('error', `Camera unavailable: ${err.message}`);
+    }
+  });
+
+  document.getElementById('btn-stop-camera').addEventListener('click', () => {
+    stopCamera(cameraStream); cameraStream = null;
+    showCaptureFeedback('idle');
+    document.getElementById('btn-capture').disabled = true;
+  });
+
+  document.getElementById('btn-capture').addEventListener('click', async () => {
+    const videoEl = document.getElementById('camera-video');
+    const canvas  = document.getElementById('camera-preview-canvas');
+    showCaptureFeedback('capturing');
+    const rawFrame = captureFrame(videoEl, canvas);
+    canvas.hidden  = false;
+    await runOCRAndLoad(rawFrame);
+  });
 
   document.getElementById('image-upload')?.addEventListener('change', async e => {
     const file = e.target.files[0];
     if (!file) return;
     const img = await fileToImageData(file);
-    await runOCROnImageData(img);
+    await runOCRAndLoad(img);
   });
 
-  // Wire result buttons via delegation (buttons are created dynamically)
   document.getElementById('camera-result')?.addEventListener('click', e => {
-    if (e.target.id === 'btn-use-captured') useCapturedEquation();
-    if (e.target.id === 'btn-retry-capture') retryCapture();
+    if (e.target.id === 'btn-use-captured') {
+      const latex = document.getElementById('camera-result')?.dataset.capturedLatex;
+      if (latex) { loadEquation(latex); document.getElementById('section-equation').scrollIntoView({ behavior: 'smooth' }); }
+    }
+    if (e.target.id === 'btn-retry-capture') {
+      document.getElementById('camera-result').hidden = true;
+      showCaptureFeedback('active');
+    }
   });
 }
 
-async function startCameraFlow() {
-  const videoEl = document.getElementById('camera-video');
-  showCaptureFeedback('capturing');
-  try {
-    cameraStream = await initCamera(videoEl);
-    showCaptureFeedback('active');
-    document.getElementById('btn-capture').disabled = false;
-  } catch (err) {
-    showCaptureFeedback('error', `Camera not available: ${err.message}. Try the image upload option.`);
-  }
-}
-
-function stopCameraFlow() {
-  stopCamera(cameraStream);
-  cameraStream = null;
-  showCaptureFeedback('idle');
-  document.getElementById('btn-capture').disabled = true;
-}
-
-async function captureAndOCR() {
-  const videoEl  = document.getElementById('camera-video');
-  const canvas   = document.getElementById('camera-preview-canvas');
-
-  showCaptureFeedback('capturing');
-  const rawFrame  = captureFrame(videoEl, canvas);
-  canvas.hidden   = false;
-
-  showCaptureFeedback('processing');
-  await runOCROnImageData(rawFrame);
-}
-
-async function runOCROnImageData(imageData) {
+async function runOCRAndLoad(imageData) {
   showCaptureFeedback('processing');
   try {
     const processed = preprocessImage(imageData);
     const { words }  = await runOCR(processed);
     const { latex, confidence } = ocrResultsToLatex(words, processed);
-
-    if (!latex) {
-      showCaptureFeedback('error', 'No text detected. Try better lighting or a clearer photo.');
-      return;
-    }
-
+    if (!latex) { showCaptureFeedback('error', 'No text detected. Try better lighting.'); return; }
     showCaptureFeedback('success', `Captured: ${latex}`);
     showCaptureResult(confidence, latex);
-
-    // Store for "Load into Navigator" button
     document.getElementById('camera-result').dataset.capturedLatex = latex;
-
-    // Wire buttons after render
-    document.getElementById('btn-use-captured')?.addEventListener('click', useCapturedEquation);
-    document.getElementById('btn-retry-capture')?.addEventListener('click', retryCapture);
-
   } catch (err) {
     showCaptureFeedback('error', `OCR failed: ${err.message}`);
   }
-}
-
-function useCapturedEquation() {
-  const latex = document.getElementById('camera-result')?.dataset.capturedLatex;
-  if (!latex) return;
-  document.getElementById('latex-input').value = latex;
-  loadEquation(latex);
-  document.getElementById('section-equation').scrollIntoView({ behavior: 'smooth' });
-  announceToScreenReader('Equation loaded into navigator. Scroll to Equation Navigator section.');
-}
-
-function retryCapture() {
-  document.getElementById('camera-result').hidden = true;
-  showCaptureFeedback('active');
 }
 
 async function fileToImageData(file) {
@@ -381,12 +349,10 @@ async function fileToImageData(file) {
     reader.onload = e => {
       const img = new Image();
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width  = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        resolve(ctx.getImageData(0, 0, img.width, img.height));
+        const cvs = document.createElement('canvas');
+        cvs.width = img.width; cvs.height = img.height;
+        cvs.getContext('2d').drawImage(img, 0, 0);
+        resolve(cvs.getContext('2d').getImageData(0, 0, img.width, img.height));
       };
       img.onerror = reject;
       img.src = e.target.result;
@@ -405,4 +371,178 @@ function initTactileExport() {
     downloadAsFile(svg, 'equisense-tactile.svg');
     announceToScreenReader('Tactile SVG downloaded.');
   });
+}
+
+// ── Voice Commands (Feature 8) ───────────────────────────────────────────────
+
+let voiceController = null;
+
+function initVoiceCommands() {
+  const startBtn = document.getElementById('btn-voice-start');
+  const stopBtn  = document.getElementById('btn-voice-stop');
+  const bar      = document.getElementById('voice-status-bar');
+
+  voiceController = initSpeechInput(
+    handleVoiceIntent,
+    (msg) => {
+      const el = document.getElementById('voice-status-text');
+      if (el) el.textContent = msg;
+    }
+  );
+
+  startBtn?.addEventListener('click', () => {
+    voiceController.start();
+    bar.hidden = false;
+    startBtn.textContent = 'Voice Commands On';
+  });
+
+  stopBtn?.addEventListener('click', () => {
+    voiceController.stop();
+    bar.hidden = true;
+    startBtn.textContent = 'Enable Voice Commands';
+  });
+}
+
+function handleVoiceIntent(intent, params) {
+  announceToScreenReader(`Command: ${intent}`);
+
+  switch (intent) {
+    case 'navigate':
+      if (!eqAST) break;
+      const direction = params.dir;
+      eqSectionFocused = true; // temporarily allow navigation
+      const keyMap = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' };
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: keyMap[direction], bubbles: true }));
+      setTimeout(() => { eqSectionFocused = false; }, 200);
+      break;
+    case 'read_equation':   if (eqAST) speak(fullEquationToSpeech(eqAST)); break;
+    case 'describe_node':   if (eqAST) speakCurrentNode(); break;
+    case 'play':            startPlayback(); break;
+    case 'stop':            stopPlayback(); break;
+    case 'replay':          stopPlayback(); setTimeout(startPlayback, 100); break;
+    case 'speed':
+      const slider = document.getElementById('playback-speed');
+      if (slider) {
+        slider.value = Math.max(2, Math.min(15, Number(slider.value) + params.delta));
+        document.getElementById('playback-speed-value').textContent = `${slider.value}s`;
+        announceToScreenReader(`Playback speed: ${slider.value} seconds`);
+      }
+      break;
+    case 'load_sample':
+      document.querySelector(`.btn-sample[data-file="assets/sample-data/${params.name}.csv"]`)?.click();
+      break;
+    case 'describe_outliers':
+      if (nlgDescription) speak(nlgDescription); break;
+    case 'describe_data':
+      if (nlgDescription) speak(nlgDescription); break;
+    case 'toggle_contrast': toggleHighContrast(); break;
+    case 'font_up':         increaseFontSize(); break;
+    case 'font_down':       decreaseFontSize(); break;
+    case 'start_inverse':   document.getElementById('btn-hum-start')?.click(); break;
+    case 'stop_inverse':    document.getElementById('btn-hum-stop')?.click(); break;
+    case 'help':            speak(HELP_TEXT); break;
+  }
+}
+
+// ── Braille Display (Feature 6) ──────────────────────────────────────────────
+
+function initBraillePanel() {
+  const container = document.getElementById('braille-container');
+  if (container) initVirtualDisplay(container);
+
+  const btBtn = document.getElementById('btn-connect-bluetooth');
+  if (btBtn) {
+    if (!BLUETOOTH_SUPPORTED) {
+      btBtn.disabled = true;
+      btBtn.title = 'Web Bluetooth not supported in this browser';
+    }
+    btBtn.addEventListener('click', async () => {
+      const connected = await connectBrailleDisplay();
+      const status = document.getElementById('bluetooth-status');
+      if (status) status.textContent = connected ? 'Physical display connected.' : 'No device selected.';
+      announceToScreenReader(connected ? 'Braille display connected.' : 'No Braille display connected.');
+    });
+  }
+}
+
+function updateBrailleDisplay(node, depth, siblingIndex) {
+  updateVirtualDisplay(node, depth, siblingIndex ?? 0);
+  if (isConnected()) {
+    const braille = nodeToBraille(node);
+    sendToBrailleDisplay(braille);
+  }
+}
+
+// ── Inverse Sonification (Feature 4) ─────────────────────────────────────────
+
+let micStop = null;
+const pitchContour = [];
+let humStartTime   = 0;
+
+function initInverseSonification() {
+  document.getElementById('btn-hum-start')?.addEventListener('click', startHumming);
+  document.getElementById('btn-hum-stop')?.addEventListener('click', stopHumming);
+}
+
+async function startHumming() {
+  const ctx = getAudioContext();
+  pitchContour.length = 0;
+  humStartTime = ctx.currentTime;
+
+  const statusEl = document.getElementById('hum-status');
+  const resultEl = document.getElementById('hum-result');
+  if (statusEl) statusEl.textContent = 'Recording — hum a rising or falling curve…';
+  if (resultEl) resultEl.textContent = '';
+
+  try {
+    const { stop } = await openMicrophone(ctx, (buffer) => {
+      const type = classifyBuffer(buffer);
+      if (type !== 'voiced') return;
+      const hz = detectPitch(buffer, ctx.sampleRate);
+      if (hz > 0) {
+        pitchContour.push({ t: ctx.currentTime - humStartTime, hz });
+      }
+    });
+    micStop = stop;
+
+    document.getElementById('btn-hum-start').disabled = true;
+    document.getElementById('btn-hum-stop').disabled  = false;
+    announceToScreenReader('Recording started. Hum a curve, then press Stop and Fit.');
+  } catch (err) {
+    if (statusEl) statusEl.textContent = `Microphone error: ${err.message}`;
+    announceToScreenReader(`Microphone error: ${err.message}`, 'assertive');
+  }
+}
+
+function stopHumming() {
+  micStop?.();
+  micStop = null;
+
+  document.getElementById('btn-hum-start').disabled = false;
+  document.getElementById('btn-hum-stop').disabled  = true;
+
+  const statusEl = document.getElementById('hum-status');
+  const resultEl = document.getElementById('hum-result');
+
+  if (pitchContour.length < 8) {
+    if (statusEl) statusEl.textContent = 'Not enough data. Try humming for at least 2 seconds.';
+    return;
+  }
+
+  if (statusEl) statusEl.textContent = `Fitting equation to ${pitchContour.length} pitch samples…`;
+
+  const fit = fitContour(pitchContour);
+  const msg = fit.latex
+    ? `Best fit (R²=${fit.r2.toFixed(2)}): ${fit.type} — ${fit.latex}`
+    : 'Could not fit a clean curve. Try a smoother hum.';
+
+  if (resultEl) resultEl.textContent = msg;
+  announceToScreenReader(msg);
+
+  if (fit.latex) {
+    // Load into equation navigator
+    document.getElementById('latex-input').value = fit.latex;
+    loadEquation(fit.latex);
+    if (statusEl) statusEl.textContent += ' — Loaded into Equation Navigator.';
+  }
 }
