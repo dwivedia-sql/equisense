@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EquiSense — Accessible STEM for Blind &amp; Low-Vision Students</title>
+  <title>EquiSense — Scientific Data Analysis & Accessible Math</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#1a5276" />
+  <meta name="theme-color" content="#1e3a8a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.svg" />
 
   <link rel="stylesheet" href="styles/base.css" />
   <link rel="stylesheet" href="styles/theme-default.css" />
+  <link rel="stylesheet" href="styles/theme-dark.css" />
   <link rel="stylesheet" href="styles/theme-high-contrast.css" />
   <link rel="stylesheet" href="styles/camera.css" />
   <link rel="stylesheet" href="styles/braille.css" />
@@ -42,10 +43,482 @@
 
   <!-- D3 -->
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
+
+  <!-- Three.js for 3D visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/three@r128/build/three.min.js" defer></script>
 </head>
-<body>
+<body class="dashboard">
   <!-- Skip link: must be the very first focusable element -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Theme & Accessibility Controller -->
+  <div id="headphones-prompt" role="note" hidden>
+    <span>For best HRTF spatial audio: use stereo headphones.</span>
+    <button id="btn-dismiss-headphones" aria-label="Dismiss headphone reminder">Dismiss</button>
+  </div>
+
+  <!-- Top Navigation Bar -->
+  <header role="banner" class="header-bar">
+    <div class="header-brand">
+      <h1 id="site-title">EquiSense</h1>
+      <span class="tagline">Scientific Data Analysis for STEM</span>
+    </div>
+    
+    <div class="header-spacer"></div>
+
+    <div class="header-controls">
+      <button id="btn-theme-toggle" class="icon-btn" aria-pressed="false" aria-label="Toggle dark mode">
+        <span class="theme-icon">🌙</span>
+      </button>
+      <button id="btn-high-contrast" class="icon-btn" aria-pressed="false" aria-label="Toggle high contrast">HC</button>
+      <button id="btn-font-increase" class="icon-btn" aria-label="Increase font size">A+</button>
+      <button id="btn-font-decrease" class="icon-btn" aria-label="Decrease font size">A−</button>
+      <button id="btn-reset-workspace" class="icon-btn btn-destructive" aria-label="Reset workspace">↻</button>
+    </div>
+  </header>
+
+  <!-- Screen reader live regions -->
+  <div id="sr-status" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+  <div id="sr-alert"  role="alert"  aria-live="assertive" aria-atomic="true" class="sr-only"></div>
+
+  <!-- Voice command status bar -->
+  <div id="voice-status-bar" class="voice-bar" hidden>
+    <span id="voice-status-text" aria-live="polite">Listening…</span>
+    <button id="btn-voice-stop" aria-label="Stop voice commands">Stop</button>
+  </div>
+
+  <!-- Dashboard Container -->
+  <div class="dashboard-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" role="navigation" aria-label="Tools navigation">
+      <nav class="tool-nav">
+        <h2 class="nav-section-title">Core Tools</h2>
+        <ul class="nav-list">
+          <li><button class="nav-btn" data-tool="graph" aria-selected="true">📊 Graph Sonifier</button></li>
+          <li><button class="nav-btn" data-tool="equation">∑ Equation Navigator</button></li>
+          <li><button class="nav-btn" data-tool="camera">📷 Camera Capture</button></li>
+        </ul>
+
+        <h2 class="nav-section-title">Analysis</h2>
+        <ul class="nav-list">
+          <li><button class="nav-btn" data-tool="visualization">🎨 Visualizations</button></li>
+          <li><button class="nav-btn" data-tool="curve-fit">📈 Curve Fitting</button></li>
+          <li><button class="nav-btn" data-tool="spectrum">🎵 Spectrum Analysis</button></li>
+          <li><button class="nav-btn" data-tool="pattern">🔍 Pattern Detection</button></li>
+        </ul>
+
+        <h2 class="nav-section-title">Advanced</h2>
+        <ul class="nav-list">
+          <li><button class="nav-btn" data-tool="inverse">🎤 Inverse Sonification</button></li>
+          <li><button class="nav-btn" data-tool="voice">🗣️ Voice Commands</button></li>
+          <li><button class="nav-btn" data-tool="tactile">✋ Tactile Export</button></li>
+        </ul>
+
+        <h2 class="nav-section-title">Workspace</h2>
+        <div class="quick-actions">
+          <button id="btn-save-workspace" class="action-btn small">💾 Save State</button>
+          <button id="btn-load-sample" class="action-btn small">📂 Load Sample</button>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="content-area">
+      
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- GRAPH SONIFIER PANEL -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <section id="panel-graph" class="tool-panel" aria-labelledby="graph-heading" hidden>
+        <header class="panel-header">
+          <h2 id="graph-heading">Graph Sonifier</h2>
+          <p class="panel-description">Upload data and listen to trends. Advanced analysis includes FFT spectrum, curve fitting, and 3D visualization.</p>
+        </header>
+
+        <div class="panel-content">
+          <div class="layout-2col">
+            <!-- Input Panel -->
+            <div class="input-section">
+              <h3>Data Input</h3>
+              <div class="input-group">
+                <label for="csv-upload">CSV file</label>
+                <input id="csv-upload" type="file" accept=".csv" />
+                <p class="hint">Two-column data (x, y) or auto-detected columns</p>
+              </div>
+
+              <div class="sample-buttons" role="group" aria-label="Sample datasets">
+                <button class="btn-sample" data-file="assets/sample-data/linear.csv">Linear</button>
+                <button class="btn-sample" data-file="assets/sample-data/sinusoidal.csv">Sinusoidal</button>
+                <button class="btn-sample" data-file="assets/sample-data/exponential.csv">Exponential</button>
+                <button class="btn-sample" data-file="assets/sample-data/outliers.csv">With Outliers</button>
+              </div>
+
+              <div class="quick-actions" role="group" aria-label="Graph actions">
+                <button class="action-btn" id="btn-load-linear-sample">Load Linear</button>
+                <button class="action-btn" id="btn-load-sinusoidal-sample">Load Sinusoidal</button>
+                <button class="action-btn" id="btn-reset-graph" class="action-btn--outline">Reset</button>
+              </div>
+
+              <div id="graph-controls" class="control-panel" hidden>
+                <label for="playback-speed">Duration
+                  <input id="playback-speed" type="range" min="2" max="15" value="5" step="1" />
+                  <output id="playback-speed-value" for="playback-speed">5s</output>
+                </label>
+                <div class="playback-buttons" role="group" aria-label="Playback controls">
+                  <button id="btn-play">▶ Play</button>
+                  <button id="btn-stop" disabled>⏹ Stop</button>
+                  <button id="btn-replay" disabled>🔄 Replay</button>
+                </div>
+              </div>
+
+              <p id="graph-data-summary" aria-live="polite" class="data-summary"></p>
+              <p id="graph-analysis-result" aria-live="polite" class="analysis-summary" style="font-style:italic"></p>
+            </div>
+
+            <!-- Visualization Area -->
+            <div class="visualization-section">
+              <div id="chart-container" class="chart-area" aria-label="Line chart visualization"></div>
+              <div class="chart-tabs" role="tablist" aria-label="Chart view options">
+                <button class="chart-tab active" data-view="2d" role="tab" aria-selected="true">2D Chart</button>
+                <button class="chart-tab" data-view="spectrum" role="tab" aria-selected="false">Spectrum</button>
+                <button class="chart-tab" data-view="3d" role="tab" aria-selected="false">3D View</button>
+              </div>
+              <div id="spectrum-container" class="chart-area" aria-label="FFT spectrum display" hidden></div>
+              <div id="3d-container" class="chart-area" aria-label="3D scatter plot" hidden></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- EQUATION NAVIGATOR PANEL -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <section id="panel-equation" class="tool-panel" aria-labelledby="eq-heading" hidden>
+        <header class="panel-header">
+          <h2 id="eq-heading">Equation Navigator</h2>
+          <p class="panel-description">Enter LaTeX equations. Navigate structure with arrow keys. Spatial audio cues place each part distinctly.</p>
+        </header>
+
+        <div class="panel-content">
+          <div class="layout-2col">
+            <!-- Input Panel -->
+            <div class="input-section">
+              <h3>LaTeX Input</h3>
+              <div class="input-group">
+                <label for="latex-input">Equation</label>
+                <input
+                  id="latex-input"
+                  type="text"
+                  placeholder="\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}"
+                  aria-describedby="latex-hint"
+                />
+                <p id="latex-hint" class="hint">LaTeX format. Try quadratic formula as a test.</p>
+                <button id="btn-parse-eq" class="action-btn">Parse Equation</button>
+              </div>
+
+              <div class="quick-actions" role="group" aria-label="Equation actions">
+                <button id="btn-load-starter-equation" class="action-btn">Load Starter</button>
+                <button id="btn-clear-equation" class="action-btn action-btn--outline">Clear</button>
+                <button id="btn-reload-current-equation" class="action-btn action-btn--outline">Reload</button>
+              </div>
+
+              <div id="eq-controls" class="control-panel" hidden>
+                <p class="keyboard-guide">
+                  <kbd>↑</kbd> go up • <kbd>↓</kbd> go deeper • <kbd>←/→</kbd> sideways • <kbd>Space</kbd> read • <kbd>R</kbd> full
+                </p>
+                <button id="btn-speak-full" class="action-btn">🔊 Read Full (R)</button>
+                <p id="eq-cursor-description" aria-live="polite" class="cursor-desc"></p>
+              </div>
+            </div>
+
+            <!-- Display Area -->
+            <div class="visualization-section">
+              <h3>Equation Structure</h3>
+              <div id="eq-rendered" aria-hidden="true" class="eq-display"></div>
+              <div id="eq-tree-visual" aria-hidden="true" class="tree-visual"></div>
+
+              <!-- Virtual Braille display -->
+              <div id="braille-panel" class="control-panel" hidden>
+                <h4>Virtual Braille Display</h4>
+                <div id="braille-container"></div>
+                <button id="btn-connect-bluetooth" class="action-btn small">🔗 Connect Display</button>
+                <span id="bluetooth-status" aria-live="polite" class="hint"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- CAMERA CAPTURE PANEL -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <section id="panel-camera" class="tool-panel" aria-labelledby="camera-heading" hidden>
+        <header class="panel-header">
+          <h2 id="camera-heading">Camera Math Capture</h2>
+          <p class="panel-description">Point at printed equations. OCR converts to LaTeX automatically. Loads into Equation Navigator.</p>
+        </header>
+
+        <div class="panel-content">
+          <div class="layout-2col">
+            <!-- Camera Feed -->
+            <div class="visualization-section">
+              <h3>Live Capture</h3>
+              <div id="camera-viewfinder" class="camera-viewfinder">
+                <div class="camera-controls" role="group" aria-label="Camera controls">
+                  <button id="btn-start-camera" class="action-btn">📷 Start</button>
+                  <button id="btn-stop-camera" class="action-btn action-btn--outline" disabled>Stop</button>
+                  <button id="btn-capture" class="action-btn action-btn--accent" disabled>Capture</button>
+                </div>
+
+                <div class="camera-live-area" aria-hidden="true">
+                  <video id="camera-video" playsinline muted aria-label="Camera viewfinder"></video>
+                  <div class="camera-guide-overlay">
+                    <div class="camera-guide-box"></div>
+                  </div>
+                </div>
+
+                <canvas id="camera-preview-canvas" hidden aria-label="Captured frame preview"></canvas>
+                <p id="camera-status" aria-live="polite" class="status-text"></p>
+              </div>
+            </div>
+
+            <!-- Options & Results -->
+            <div class="input-section">
+              <h3>Options</h3>
+              
+              <div id="camera-result" hidden class="result-panel">
+                <h4>Captured Math</h4>
+                <p id="camera-ocr-result" aria-live="polite"></p>
+              </div>
+
+              <details class="panel-details">
+                <summary>No camera? Upload image instead</summary>
+                <div class="input-group" style="margin-top:0.75rem">
+                  <label for="image-upload">Image file (JPG or PNG)</label>
+                  <input id="image-upload" type="file" accept="image/*" />
+                </div>
+              </details>
+
+              <div class="quick-actions" role="group" aria-label="Camera actions">
+                <button id="btn-camera-reset" class="action-btn action-btn--outline">Reset Capture</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- VISUALIZATION PANEL (3D, Heatmap, Advanced Plots) -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <section id="panel-visualization" class="tool-panel" aria-labelledby="viz-heading" hidden>
+        <header class="panel-header">
+          <h2 id="viz-heading">Advanced Visualizations</h2>
+          <p class="panel-description">3D scatter plots, heatmaps, and custom projections. Load graph data first.</p>
+        </header>
+
+        <div class="panel-content">
+          <div class="layout-2col">
+            <div class="input-section">
+              <h3>View Options</h3>
+              <div class="option-group">
+                <label><input type="radio" name="viz-type" value="3d-scatter" checked /> 3D Scatter</label>
+                <label><input type="radio" name="viz-type" value="heatmap" /> Heatmap</label>
+                <label><input type="radio" name="viz-type" value="surface" /> Surface Plot</label>
+              </div>
+              <button id="btn-render-3d" class="action-btn">Render Visualization</button>
+              <p class="hint">Uses current graph data. Rotate with mouse or arrow keys.</p>
+            </div>
+            <div id="advanced-viz-container" class="visualization-section chart-area" aria-label="Advanced visualization"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- CURVE FITTING PANEL -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <section id="panel-curve-fit" class="tool-panel" aria-labelledby="curvfit-heading" hidden>
+        <header class="panel-header">
+          <h2 id="curvfit-heading">Curve Fitting & Regression</h2>
+          <p class="panel-description">Fit multiple model types to your data. See R² fit quality and equation output.</p>
+        </header>
+
+        <div class="panel-content">
+          <div class="layout-2col">
+            <div class="input-section">
+              <h3>Fit Models</h3>
+              <div class="option-group">
+                <label><input type="radio" name="fit-model" value="linear" checked /> Linear</label>
+                <label><input type="radio" name="fit-model" value="polynomial" /> Polynomial</label>
+                <label><input type="radio" name="fit-model" value="exponential" /> Exponential</label>
+                <label><input type="radio" name="fit-model" value="logarithmic" /> Logarithmic</label>
+                <label><input type="radio" name="fit-model" value="power" /> Power Law</label>
+              </div>
+              <button id="btn-fit-curve" class="action-btn">Fit Selected Model</button>
+              <p class="hint">Requires graph data to be loaded.</p>
+            </div>
+            <div class="visualization-section">
+              <h3>Results</h3>
+              <div id="curve-fit-results" class="result-panel"></div>
+              <div id="curve-fit-chart" class="chart-area" aria-label="Fitted curve visualization"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- SPECTRUM ANALYSIS PANEL -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <section id="panel-spectrum" class="tool-panel" aria-labelledby="spec-heading" hidden>
+        <header class="panel-header">
+          <h2 id="spec-heading">Spectrum Analysis</h2>
+          <p class="panel-description">FFT analysis, frequency components, and advanced signal processing.</p>
+        </header>
+
+        <div class="panel-content">
+          <div class="layout-2col">
+            <div class="input-section">
+              <h3>Analysis Options</h3>
+              <div class="option-group">
+                <label>FFT Size
+                  <select id="fft-size">
+                    <option value="256">256</option>
+                    <option value="512">512</option>
+                    <option value="1024" selected>1024</option>
+                    <option value="2048">2048</option>
+                  </select>
+                </label>
+              </div>
+              <button id="btn-analyze-spectrum" class="action-btn">Analyze Spectrum</button>
+              <p class="hint">Shows dominant frequencies and spectral content.</p>
+              <div id="spectrum-stats" class="result-panel"></div>
+            </div>
+            <div class="visualization-section">
+              <h3>FFT Spectrum</h3>
+              <div id="spectrum-chart" class="chart-area" aria-label="Frequency spectrum display"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- PATTERN DETECTION PANEL -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <section id="panel-pattern" class="tool-panel" aria-labelledby="pattern-heading" hidden>
+        <header class="panel-header">
+          <h2 id="pattern-heading">Pattern Detection</h2>
+          <p class="panel-description">Automatic pattern recognition, anomaly detection, and data insights.</p>
+        </header>
+
+        <div class="panel-content">
+          <div class="layout-2col">
+            <div class="input-section">
+              <h3>Detection Options</h3>
+              <div class="option-group">
+                <label><input type="checkbox" id="detect-trend" checked /> Trend Analysis</label>
+                <label><input type="checkbox" id="detect-cycles" /> Cyclic Patterns</label>
+                <label><input type="checkbox" id="detect-anomalies" /> Anomalies</label>
+                <label><input type="checkbox" id="detect-periodicity" /> Periodicity</label>
+              </div>
+              <button id="btn-detect-patterns" class="action-btn">Run Detection</button>
+              <p class="hint">Analyzes loaded graph data automatically.</p>
+            </div>
+            <div class="visualization-section">
+              <h3>Detected Patterns</h3>
+              <div id="pattern-results" class="result-panel"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- INVERSE SONIFICATION PANEL -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <section id="panel-inverse" class="tool-panel" aria-labelledby="inverse-heading" hidden>
+        <header class="panel-header">
+          <h2 id="inverse-heading">Inverse Sonification</h2>
+          <p class="panel-description">Hum a melody and we'll fit it to a mathematical curve.</p>
+        </header>
+
+        <div class="panel-content">
+          <div class="layout-2col">
+            <div class="input-section">
+              <h3>Capture Hum</h3>
+              <div class="playback-buttons" role="group" aria-label="Inverse sonification controls">
+                <button id="btn-hum-start" class="action-btn">🎤 Start Humming</button>
+                <button id="btn-hum-stop" class="action-btn action-btn--outline" disabled>Stop &amp; Fit</button>
+              </div>
+              <p id="hum-status" aria-live="polite" class="status-text"></p>
+              <p id="hum-result" aria-live="polite" class="result-text"></p>
+            </div>
+            <div class="visualization-section">
+              <h3>Detected Curve</h3>
+              <div id="hum-chart" class="chart-area" aria-label="Fitted curve from humming"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- VOICE COMMANDS PANEL -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <section id="panel-voice" class="tool-panel" aria-labelledby="voice-heading" hidden>
+        <header class="panel-header">
+          <h2 id="voice-heading">Voice Commands</h2>
+          <p class="panel-description">Control tools entirely by voice. Say "help" for full command list.</p>
+        </header>
+
+        <div class="panel-content">
+          <div class="layout-center">
+            <div class="input-section">
+              <button id="btn-voice-start" class="action-btn btn-large">🗣️ Enable Voice Mode</button>
+              <p class="hint">Say "help" for available commands. Works best after learning the button interface first.</p>
+              <details class="panel-details">
+                <summary>Quick Reference</summary>
+                <div class="command-list">
+                  <p><strong>Graph:</strong> "play", "stop", "load linear", "reset graph"</p>
+                  <p><strong>Equation:</strong> "parse equation", "read full", "clear equation"</p>
+                  <p><strong>Camera:</strong> "start camera", "capture", "stop camera"</p>
+                  <p><strong>General:</strong> "help", "reset all", "theme toggle"</p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- TACTILE EXPORT PANEL -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <section id="panel-tactile" class="tool-panel" aria-labelledby="tactile-heading" hidden>
+        <header class="panel-header">
+          <h2 id="tactile-heading">Tactile Export</h2>
+          <p class="panel-description">Download SVG files optimized for embosser output (Tiger, Swell, etc.)</p>
+        </header>
+
+        <div class="panel-content">
+          <div class="layout-center">
+            <div class="input-section">
+              <h3>Export Options</h3>
+              <button id="btn-export-tactile" class="action-btn btn-large" disabled>📥 Download Tactile SVG</button>
+              <p class="hint">Load a dataset in Graph Sonifier first. SVG is optimized for embossing.</p>
+              <details class="panel-details">
+                <summary>Format Details</summary>
+                <p>Output is suitable for Tiger embossers and similar tactile graphics hardware. Includes braille labels and optimized line weights.</p>
+              </details>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer role="contentinfo" class="footer">
+    <p>EquiSense — Professional Scientific Analysis for Accessible STEM | TSA Software Development 2026</p>
+  </footer>
+
+  <script type="module" src="scripts/main.js"></script>
+</body>
 
   <!-- Headphones prompt (shown on first use of HRTF) -->
   <div id="headphones-prompt" role="note" hidden>
